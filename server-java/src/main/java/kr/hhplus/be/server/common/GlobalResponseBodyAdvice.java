@@ -9,17 +9,6 @@ import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
-/**
- * <pre>
- * << 개정이력(Modification Information) >>
- *  수정일               수정자            수정내용
- *  -------------       ----------       -------------------------
- *  2024-03-29          김진교            최초생성
- *
- * </pre>
- * @see
- * @since 2024-03-29
- **/
 @ControllerAdvice
 public class GlobalResponseBodyAdvice implements ResponseBodyAdvice<Object> {
 
