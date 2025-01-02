@@ -8,3 +8,10 @@
 3. [flow chart](./docs/flow_chart.md)
 4. [erd](./docs/erd.md)
 5. [API specification](./docs/api_specification.md)
+6. [project structure](#6-project-structure)
+
+
+### 6. project structure
+![alt text](./docs/img/project_structure-1.png)
+
+![alt text](./docs/img/project_structure-2.png)

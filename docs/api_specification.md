@@ -33,5 +33,5 @@
 
 ### 6. 인기 상품 조회
 
-![alt text](image.png)
-![alt text](image-1.png)
+![alt text](./img/인기상품조회api-1.png)
+![alt text](./img/인기상품조회api-2.png)
