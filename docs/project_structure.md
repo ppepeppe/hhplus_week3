@@ -1,8 +1,7 @@
 # Project Structure
 ---
-
+```plaintext
 kr.hhplus.be.server
-
 │
 ├── api
 │   ├── coupon
