@@ -59,7 +59,6 @@ kr.hhplus.be.server
 └── ServerApplication (Main Application Entry Point)
 
 **1. API Layer (api)**
-
 - 역할: 클라이언트와의 인터페이스를 처리합니다.
 - 구성
     
@@ -68,7 +67,6 @@ kr.hhplus.be.server
     - usecase: 특정 비즈니스 로직을 처리하는 애플리케이션 계층. 도메인 서비스를 호출하고 작업을 조율합니다.
 
 **2. Domain Layer (domain)**
-
 - 역할: 비즈니스 규칙 및 핵심 로직을 처리합니다.
 - 구성
 
@@ -76,6 +74,6 @@ kr.hhplus.be.server
     - repository: 데이터베이스와의 상호작용하는 repositroy 를 추상화 합니다.(DIP)
     - service: 도메인 비즈니스 로직을 처리합니다.
     - infrastructure: 외부 시스템과의 상호작용하는 JPA Repository 등과 그 구현체를 처리합니다.
-**3. Common Layer (common)**
 
+**3. Common Layer (common)**
 역할: 여러모듈에서 재상용 가능한 메소드를 제공합니다(추후 Exception 메소드 분리할 예정)
