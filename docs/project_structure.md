@@ -1,4 +1,8 @@
 # Project Structure
+
+[README](../README.md)
+
+
 ---
 ```plaintext
 kr.hhplus.be.server
