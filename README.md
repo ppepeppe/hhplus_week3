@@ -9,3 +9,5 @@
 4. [erd](./docs/erd.md)
 5. [API specification](./docs/api_specification.md)
 6. [project structure](./docs/project_structure.md)
+7. [swagger](./docs/swagger.md)
+
