@@ -40,8 +40,14 @@ dependencies {
 	// Lombok
 	compileOnly("org.projectlombok:lombok")
 	annotationProcessor("org.projectlombok:lombok")
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+	// swagger
+	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+	// webflux
+	implementation("org.springframework.boot:spring-boot-starter-webflux")
 
-    // Test
+
+	// Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.boot:spring-boot-testcontainers")
 	testImplementation("org.testcontainers:junit-jupiter")
