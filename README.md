@@ -11,3 +11,15 @@
 6. [project structure](./docs/project_structure.md)
 7. [swagger](./docs/swagger.md)
 
+
+
+docker compose 를 이용해 테스트 진행했습니다
+docker compose up -d 후
+
+CouponUseCaseTest, SalesStatsIntegrationTest 순서로 테스트 진행 후
+
+docker compose down -v 후
+
+docker compose up -d
+
+OrderFacadeIntegrationTest, OrderFacadeConcurrencyIntegrationTest 순으로 테스트 해주시면 감사하겠습니다.
