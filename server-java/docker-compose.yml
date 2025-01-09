@@ -13,7 +13,6 @@ services:
       #      - ./data/mysql/:/var/lib/mysql
       - ./data/init.sql:/docker-entrypoint-initdb.d/init.sql
 
-
 networks:
   default:
     driver: bridge
