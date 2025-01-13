@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.unit;
+package kr.hhplus.be.server.unit.coupon;
 
 import kr.hhplus.be.server.apps.coupon.domain.models.UserCoupon;
 import kr.hhplus.be.server.apps.coupon.domain.repository.UserCouponRepository;
@@ -31,10 +31,10 @@ public class UserCouponServiceTest {
         Long couponId = 1L;
         UserCoupon userCoupon = new UserCoupon(1L, userId, couponId, false);
 
-        when(userCouponRepository.findUserCouponByUserId(userId)).thenReturn(userCoupon);
+        when(userCouponRepository.findUserCouponByUserIdAndCouponId(userId, couponId)).thenReturn(userCoupon);
 
         // when
-        UserCoupon userCoupon1 = userCouponService.getUserCouponByUserId(userId);
+        UserCoupon userCoupon1 = userCouponService.getUserCouponByUserIdAndCouponId(userId, couponId);
 
         // then
         assertThat(userCoupon1).isEqualTo(userCoupon);

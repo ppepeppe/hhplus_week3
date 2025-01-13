@@ -15,6 +15,7 @@ public class UserPointService {
 
         return userPoint.getPoint();
     }
+
     public UserPoint chargeUserPoint(long userId, Integer point) {
         UserPointValidator.validateChargeAmount(point);
         UserPoint userPoint = userPointRepository.findUserPointByUserId(userId);

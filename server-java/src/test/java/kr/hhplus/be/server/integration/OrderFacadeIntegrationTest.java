@@ -36,7 +36,7 @@ public class OrderFacadeIntegrationTest {
     @Test
     public void testOrderPlaceWithCoupon() {
         // given 주문 데이터 준비
-        OrderDto orderDto = OrderDto.builder()
+        Order order = Order.builder()
                 .userId(1L)
                 .totalPaymentAmount(1000)
                 .totalQuantity(1)
@@ -49,10 +49,10 @@ public class OrderFacadeIntegrationTest {
         List<OrderItemDTO> orderItems = List.of(orderItemDTO);
 
         // When: OrderFacade를 호출
-        Order order = orderFacade.orderPlace(orderDto, orderItems);
+        Order order1 = orderFacade.placeOrder(1L, 1L, orderItems);
 
         // Then: 결과 검증
-        assertNotNull(order);
-        assertEquals(750, orderDto.getTotalPaymentAmount()); // 할인 금액 검증
+        assertNotNull(order1);
+        assertEquals(750, order1.getTotalPaymentAmount()); // 할인 금액 검증
     }
 }

@@ -7,5 +7,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface UserCouponJpaRepository extends JpaRepository<UserCoupon, Long> {
     UserCoupon save(UserCoupon userCoupon);
-    UserCoupon findByUserId(Long userId);
+    UserCoupon findByUserIdAndCouponId(Long userId, Long  couponId);
 }

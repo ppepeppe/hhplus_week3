@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.unit;
+package kr.hhplus.be.server.unit.order;
 
 import kr.hhplus.be.server.apps.order.domain.models.dto.OrderDto;
 import kr.hhplus.be.server.apps.order.domain.models.dto.OrderItemDTO;

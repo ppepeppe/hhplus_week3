@@ -26,8 +26,8 @@ public class UserCouponService {
     /**
      * 유저쿠폰 조회
      */
-    public UserCoupon getUserCouponByUserId(Long userId) {
-        return userCouponRepository.findUserCouponByUserId(userId);
+    public UserCoupon getUserCouponByUserIdAndCouponId(Long userId, Long couponId) {
+        return userCouponRepository.findUserCouponByUserIdAndCouponId(userId, couponId);
     }
     /**
      * 유저쿠폰 사용여부

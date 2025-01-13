@@ -45,7 +45,7 @@ public class OrderFacadeConcurrencyIntegrationTest {
                             .quantity(1)
                             .build();
 
-                    orderFacade.orderPlace(orderDto, List.of(orderItemDTO));
+                    orderFacade.placeOrder(1L, 0L, List.of(orderItemDTO));
                 } catch (Exception e) {
                     System.out.println("주문 실패: " + e.getMessage());
                 }

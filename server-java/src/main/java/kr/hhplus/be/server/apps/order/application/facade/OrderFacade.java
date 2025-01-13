@@ -20,15 +20,26 @@ public class OrderFacade {
     private final OrderDataSender orderDataSender;
     private final CouponUseCase couponUseCase;
 
-    public Order orderPlace(OrderDto orderDto, List<OrderItemDTO> orderItems) {
+    public Order placeOrder(Long userId, Long couponId, List<OrderItemDTO> orderItems) {
+        Integer totalPaymentAmount = 0;
+        Integer totalQuantity = 0;
+        for (OrderItemDTO orderItem : orderItems) {
+            totalPaymentAmount += orderItem.getPaymentAmount();
+            totalQuantity += orderItem.getQuantity();
+        }
+        Order order = Order.builder()
+                .userId(userId)
+                .totalPaymentAmount(totalPaymentAmount)
+                .totalQuantity(totalQuantity)
+                .build();
         // 쿠폰 적용 후 가격(없을 시 기존 가격)
-        double totalAmountAfterDiscount = couponUseCase.applyCouponDiscount(orderDto.getUserId(), orderDto.getTotalPaymentAmount());
+        double totalAmountAfterDiscount = couponUseCase.applyCouponDiscount(userId, couponId, totalPaymentAmount);
 
-        orderDto.setTotalPaymentAmount((int) (totalAmountAfterDiscount));
+        order.setTotalPaymentAmount((int) (totalAmountAfterDiscount));
         // paymentUsecase 실행(상품, 유저 관련 핸들링)
-        paymentUseCase.handlePayment(orderDto, orderItems);
+        paymentUseCase.handlePayment(order, orderItems);
         // orderUsecase 실행 (주문 관련 핸들링)
-        Order order = orderUseCase.createOrder(orderDto, orderItems);
+        orderUseCase.createOrder(order, orderItems);
         // 외부 플랫폼 전송
         orderDataSender.sendOrderData(order);
         return order;

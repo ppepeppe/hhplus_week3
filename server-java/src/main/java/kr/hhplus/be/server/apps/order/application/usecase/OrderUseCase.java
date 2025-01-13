@@ -18,8 +18,7 @@ public class OrderUseCase {
     private final PaymentService paymentService;
     // 주문 생성
     @Transactional
-    public Order createOrder(OrderDto orderDto, List<OrderItemDTO> orderItems) {
-
-        return orderService.order(orderDto, orderItems);
+    public void createOrder(Order order, List<OrderItemDTO> orderItems) {
+        orderService.order(order, orderItems);
     }
 }

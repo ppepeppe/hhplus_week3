@@ -33,18 +33,20 @@ public class CouponUseCase {
         return userCouponService.issueCoupon(userId, couponId);
     }
 
-    public double applyCouponDiscount(Long userId, double totalAmount) {
+    public double applyCouponDiscount(Long userId, Long couponId, double totalAmount) {
         // 사용 가능한 유저 쿠폰 조회
-        UserCoupon userCoupon = userCouponService.getUserCouponByUserId(userId);
-        if (userCoupon == null) {
+//        UserCoupon userCoupon = userCouponService.getUserCouponByUserId(userId);
+//        if (userCoupon == null) {
+//            return totalAmount;
+//        }
+        // 쿠폰 정보 조회
+        Coupon coupon = couponService.getCouponById(couponId);
+        if (coupon == null) {
             return totalAmount;
         }
-        // 쿠폰 정보 조회
-        Coupon coupon = couponService.getCouponById(userCoupon.getCouponId());
-
         // 할인 계산
         double discount = couponService.calculateDiscount(coupon, totalAmount);
-
+        UserCoupon userCoupon = userCouponService.getUserCouponByUserIdAndCouponId(userId, couponId);
         // 쿠폰 사용 처리
         userCouponService.markCouponAsUsed(userCoupon);
 

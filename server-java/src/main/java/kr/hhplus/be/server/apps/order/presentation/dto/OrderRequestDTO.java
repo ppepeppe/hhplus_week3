@@ -11,6 +11,7 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 public class OrderRequestDTO {
+    public Long userId;
     public List<OrderItemDTO> orderItems;
     public Long couponId;
 

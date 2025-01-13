@@ -19,12 +19,7 @@ public class OrderService {
     /**
      * 주문 상품 정보 저장
      */
-    public Order order(OrderDto orderDto, List<OrderItemDTO> orderItems) {
-        Order order = Order.builder()
-                .userId(orderDto.getUserId())
-                .totalPaymentAmount(orderDto.getTotalPaymentAmount())
-                .totalQuantity(orderDto.getTotalQuantity())
-                .build();
+    public Order order(Order order, List<OrderItemDTO> orderItems) {
         // 주문 정보 저장
         Order newOrder = orderRepository.save(order);
         // 주문 item 저장
