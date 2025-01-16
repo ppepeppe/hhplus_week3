@@ -6,8 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/products")
@@ -15,7 +13,7 @@ public class ProductController {
     private final ProductService productService;
     @GetMapping("/{productId}")
     public Product getProductByProductId(@PathVariable("productId") long productId) {
-        return new Product(productId, "패딩", 10000, 10, 0);
+        return productService.getProductByProductId(productId);
     }
     @GetMapping("/all")
     public Page<Product> getProductList(@RequestParam(defaultValue = "0") int page, // 기본 페이지 번호: 0

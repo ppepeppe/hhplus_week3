@@ -8,6 +8,10 @@ import kr.hhplus.be.server.apps.coupon.domain.service.UserCouponService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
 @Component
 @RequiredArgsConstructor
 public class CouponUseCase {
@@ -33,22 +37,40 @@ public class CouponUseCase {
         return userCouponService.issueCoupon(userId, couponId);
     }
 
-    public double applyCouponDiscount(Long userId, double totalAmount) {
+    public double applyCouponDiscount(Long userId, Long couponId, double totalAmount) {
         // 사용 가능한 유저 쿠폰 조회
-        UserCoupon userCoupon = userCouponService.getUserCouponByUserId(userId);
-        if (userCoupon == null) {
+//        UserCoupon userCoupon = userCouponService.getUserCouponByUserId(userId);
+//        if (userCoupon == null) {
+//            return totalAmount;
+//        }
+        // 쿠폰 정보 조회
+        Coupon coupon = couponService.getCouponById(couponId);
+        if (coupon == null) {
             return totalAmount;
         }
-        // 쿠폰 정보 조회
-        Coupon coupon = couponService.getCouponById(userCoupon.getCouponId());
-
         // 할인 계산
         double discount = couponService.calculateDiscount(coupon, totalAmount);
-
+        Optional<UserCoupon> userCoupon = userCouponService.getUserCouponByUserIdAndCouponId(userId, couponId);
         // 쿠폰 사용 처리
-        userCouponService.markCouponAsUsed(userCoupon);
+        userCouponService.markCouponAsUsed(userCoupon.get());
 
         // 할인 금액 반환
         return totalAmount - discount;
     }
+    public List<UserCoupon> getUserCouponListByUserId(Long userId) {
+        return userCouponService.getUserCouponListByUserId(userId);
+    }
+
+    public Coupon registerCoupon(String code, Double discountPercent, LocalDate validDate, Integer maxCount, Integer currentCount) {
+        Coupon coupon = Coupon.builder()
+                .code(code)
+                .discountPercent(discountPercent)
+                .validDate(validDate)
+                .maxCount(30)
+                .currentCount(0)
+                .build();
+
+        return couponService.saveCoupon(coupon);
+    }
+
 }
