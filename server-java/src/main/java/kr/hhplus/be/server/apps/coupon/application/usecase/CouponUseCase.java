@@ -8,6 +8,10 @@ import kr.hhplus.be.server.apps.coupon.domain.service.UserCouponService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+
 @Component
 @RequiredArgsConstructor
 public class CouponUseCase {
@@ -46,11 +50,27 @@ public class CouponUseCase {
         }
         // 할인 계산
         double discount = couponService.calculateDiscount(coupon, totalAmount);
-        UserCoupon userCoupon = userCouponService.getUserCouponByUserIdAndCouponId(userId, couponId);
+        Optional<UserCoupon> userCoupon = userCouponService.getUserCouponByUserIdAndCouponId(userId, couponId);
         // 쿠폰 사용 처리
-        userCouponService.markCouponAsUsed(userCoupon);
+        userCouponService.markCouponAsUsed(userCoupon.get());
 
         // 할인 금액 반환
         return totalAmount - discount;
     }
+    public List<UserCoupon> getUserCouponListByUserId(Long userId) {
+        return userCouponService.getUserCouponListByUserId(userId);
+    }
+
+    public Coupon registerCoupon(String code, Double discountPercent, LocalDate validDate, Integer maxCount, Integer currentCount) {
+        Coupon coupon = Coupon.builder()
+                .code(code)
+                .discountPercent(discountPercent)
+                .validDate(validDate)
+                .maxCount(30)
+                .currentCount(0)
+                .build();
+
+        return couponService.saveCoupon(coupon);
+    }
+
 }

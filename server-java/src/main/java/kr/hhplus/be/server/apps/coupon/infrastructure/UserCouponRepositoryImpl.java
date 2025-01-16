@@ -6,6 +6,9 @@ import kr.hhplus.be.server.apps.user.infrastructure.UserJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+import java.util.Optional;
+
 @Repository
 @RequiredArgsConstructor
 public class UserCouponRepositoryImpl implements UserCouponRepository {
@@ -17,7 +20,12 @@ public class UserCouponRepositoryImpl implements UserCouponRepository {
     }
 
     @Override
-    public UserCoupon findUserCouponByUserIdAndCouponId(Long userId, Long couponId) {
+    public List<UserCoupon> findAllByUserId(Long userId) {
+        return userCouponJpaRepository.findAllByUserId(userId);
+    }
+
+    @Override
+    public Optional<UserCoupon> findUserCouponByUserIdAndCouponId(Long userId, Long couponId) {
         return userCouponJpaRepository.findByUserIdAndCouponId(userId, couponId);
     }
 }

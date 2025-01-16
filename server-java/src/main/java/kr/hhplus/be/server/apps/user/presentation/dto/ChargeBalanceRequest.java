@@ -6,5 +6,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ChargeBalanceRequest {
+    public Long userId;
     public Integer point;
 }

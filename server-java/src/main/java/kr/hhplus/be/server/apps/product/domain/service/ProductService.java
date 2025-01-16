@@ -3,6 +3,8 @@ package kr.hhplus.be.server.apps.product.domain.service;
 import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.apps.product.domain.models.Product;
 import kr.hhplus.be.server.apps.product.domain.repository.ProductRepository;
+import kr.hhplus.be.server.common.exception.ProductNotFoundException;
+import kr.hhplus.be.server.common.exception.vo.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,18 +20,25 @@ public class ProductService {
     public final ProductRepository productRepository;
 
     public Product getProductByProductId(long productId) {
-
-        return productRepository.findProductByProductId(productId);
+        return productRepository.findProductByProductId(productId)
+                .orElseThrow(() -> new ProductNotFoundException(ErrorCode.PRODUCT_NOT_FOUND,
+                        "Product not found with ID: " + productId));
     }
     /**
      * 주문 시 상품 수량 차감, 판매량 증가
      */
     @Transactional
     public Product orderProduct(long productId, Integer quantity) {
-
+        if (quantity == null || quantity <= 0) {
+            throw new IllegalArgumentException("Order quantity must be greater than 0");
+        }
         Product product = productRepository.findByIdWithLock(productId);
+        if (product == null) {
+            throw new ProductNotFoundException(ErrorCode.NOT_FOUND_ERROR,
+                    "Product not found with ID: " + productId);
+        }
         if (product.getQuantity() < quantity) {
-            throw new IllegalArgumentException("재고 부족으로 주문 실패");
+            throw new IllegalArgumentException("재고 부족으로 주문 실패" + productId);
         }
         product.setQuantity(product.getQuantity() - quantity);
         product.setSales(product.getSales() + quantity);

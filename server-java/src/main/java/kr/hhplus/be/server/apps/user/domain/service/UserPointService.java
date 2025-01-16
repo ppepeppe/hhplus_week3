@@ -30,6 +30,8 @@ public class UserPointService {
      */
     public UserPoint orderUserPoint(long userId, Integer point) {
         UserPoint userPoint = userPointRepository.findUserPointByUserId(userId);
+        System.out.println(userId);
+        System.out.println(userPoint);
         userPoint.setPoint(userPoint.getPoint() - point);
 
         return userPointRepository.save(userPoint);

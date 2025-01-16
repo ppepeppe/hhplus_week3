@@ -24,8 +24,8 @@ public class UserController {
     }
 
     // 잔액 충전
-    @PostMapping("/{userId}/charge")
-    public ResponseEntity<UserPoint> chargePoint(@PathVariable Long userId, @RequestBody ChargeBalanceRequest chargeBalanceRequest) {
-        return ResponseEntity.ok(userPointService.chargeUserPoint(userId, chargeBalanceRequest.getPoint()));
+    @PostMapping("/charge")
+    public ResponseEntity<UserPoint> chargePoint(@RequestBody ChargeBalanceRequest chargeBalanceRequest) {
+        return ResponseEntity.ok(userPointService.chargeUserPoint(chargeBalanceRequest.getUserId(), chargeBalanceRequest.getPoint()));
     }
 }

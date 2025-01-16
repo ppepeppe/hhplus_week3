@@ -2,8 +2,8 @@ package kr.hhplus.be.server.common;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import kr.hhplus.be.server.vo.ErrorCode;
-import kr.hhplus.be.server.vo.ErrorResponse;
+import kr.hhplus.be.server.common.exception.vo.ErrorCode;
+import kr.hhplus.be.server.common.exception.vo.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

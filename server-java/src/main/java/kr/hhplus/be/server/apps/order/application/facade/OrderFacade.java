@@ -42,6 +42,7 @@ public class OrderFacade {
         orderUseCase.createOrder(order, orderItems);
         // 외부 플랫폼 전송
         orderDataSender.sendOrderData(order);
+        System.out.println(order);
         return order;
     }
 }

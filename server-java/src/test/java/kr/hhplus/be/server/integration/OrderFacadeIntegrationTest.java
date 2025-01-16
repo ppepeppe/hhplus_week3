@@ -1,37 +1,89 @@
 package kr.hhplus.be.server.integration;
 
+import jakarta.transaction.Transactional;
+import kr.hhplus.be.server.apps.coupon.domain.models.Coupon;
+import kr.hhplus.be.server.apps.coupon.domain.models.UserCoupon;
 import kr.hhplus.be.server.apps.coupon.domain.repository.CouponRepository;
 import kr.hhplus.be.server.apps.coupon.domain.repository.UserCouponRepository;
 import kr.hhplus.be.server.apps.order.application.facade.OrderFacade;
 import kr.hhplus.be.server.apps.order.domain.models.dto.OrderDto;
 import kr.hhplus.be.server.apps.order.domain.models.dto.OrderItemDTO;
 import kr.hhplus.be.server.apps.order.domain.models.entity.Order;
+import kr.hhplus.be.server.apps.order.domain.repository.OrderItemRepository;
 import kr.hhplus.be.server.apps.order.domain.repository.OrderRepository;
+import kr.hhplus.be.server.apps.payment.domain.models.Payment;
+import kr.hhplus.be.server.apps.payment.domain.models.TransactionType;
+import kr.hhplus.be.server.apps.payment.domain.repository.PaymentRepository;
+import kr.hhplus.be.server.apps.product.domain.models.Product;
+import kr.hhplus.be.server.apps.product.domain.repository.ProductRepository;
+import kr.hhplus.be.server.apps.user.domain.models.entity.User;
+import kr.hhplus.be.server.apps.user.domain.models.entity.UserPoint;
+import kr.hhplus.be.server.apps.user.domain.repository.UserPointRepository;
+import kr.hhplus.be.server.apps.user.domain.repository.UserRepository;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
+@AutoConfigureMockMvc
 @ActiveProfiles("test")
 public class OrderFacadeIntegrationTest {
-
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
     @Autowired
     private OrderFacade orderFacade;
 
     @Autowired
-    private UserCouponRepository userCouponRepository;
-
+    private PaymentRepository paymentRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private UserPointRepository userPointRepository;
+    @Autowired
+    private ProductRepository productRepository;
     @Autowired
     private CouponRepository couponRepository;
-
     @Autowired
-    private OrderRepository orderRepository;
+    private UserCouponRepository userCouponRepository;
+
+    @BeforeEach
+    void setUp() {
+        // Product 초기화
+        Product productA = new Product(null, "Product A", 1000, 10, 0);
+        productRepository.save(productA);
+
+        // User 초기화
+        User user = new User(null, "seongdo");
+        userRepository.save(user);
+
+        // UserPoint 초기화
+        UserPoint userPoint = new UserPoint(null, user.getUserId(), 200000);
+        userPointRepository.save(userPoint);
+
+        // Payment 초기화
+        Payment payment = new Payment(null, user.getUserId(), 100000, TransactionType.CHARGE);
+        paymentRepository.save(payment);
+
+        // Coupon 초기화
+        Coupon coupon = new Coupon(null, "TESTCODE", 0.25, LocalDate.of(2025, 1, 11), 30, 0);
+        couponRepository.save(coupon);
+
+        // UserCoupon 초기화
+        UserCoupon userCoupon = new UserCoupon(null, user.getUserId(), coupon.getCouponId(), false);
+        userCouponRepository.save(userCoupon);
+    }
 
     @Test
     public void testOrderPlaceWithCoupon() {
@@ -54,5 +106,16 @@ public class OrderFacadeIntegrationTest {
         // Then: 결과 검증
         assertNotNull(order1);
         assertEquals(750, order1.getTotalPaymentAmount()); // 할인 금액 검증
+    }
+    @AfterEach
+    void tearDown() {
+        // 테스트 후 데이터 삭제
+        jdbcTemplate.execute("TRUNCATE TABLE coupon");
+        jdbcTemplate.execute("TRUNCATE TABLE user_coupon");
+        jdbcTemplate.execute("TRUNCATE TABLE product");
+        jdbcTemplate.execute("TRUNCATE TABLE user");
+        jdbcTemplate.execute("TRUNCATE TABLE user_point");
+        jdbcTemplate.execute("TRUNCATE TABLE payment");
+        jdbcTemplate.execute("TRUNCATE TABLE user");
     }
 }

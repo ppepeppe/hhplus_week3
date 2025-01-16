@@ -1,12 +1,12 @@
 package kr.hhplus.be.server.unit.order;
 
-import kr.hhplus.be.server.apps.order.domain.models.dto.OrderDto;
 import kr.hhplus.be.server.apps.order.domain.models.dto.OrderItemDTO;
 import kr.hhplus.be.server.apps.order.domain.models.entity.Order;
 import kr.hhplus.be.server.apps.order.domain.models.entity.OrderItem;
 import kr.hhplus.be.server.apps.order.domain.repository.OrderItemRepository;
 import kr.hhplus.be.server.apps.order.domain.repository.OrderRepository;
 import kr.hhplus.be.server.apps.order.domain.service.OrderService;
+import kr.hhplus.be.server.common.exception.OrderException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 
@@ -42,9 +43,9 @@ public class OrderServiceTest {
     void shouldOrderProductByProductIdAndQuantitySuccessfully() {
         //given
         List<OrderItemDTO> orderItemDTOList = new ArrayList<>();
-
-        OrderDto orderDto = OrderDto.builder()
-                .userId(USER_ID)
+        Order order = Order.builder()
+                .orderId(1L)
+                .orderId(1L)
                 .totalPaymentAmount(100000)
                 .totalQuantity(1)
                 .build();
@@ -67,13 +68,77 @@ public class OrderServiceTest {
                 .thenReturn(orderItem);
 
         // when
-        Order order = orderService.order(orderDto, orderItemDTOList);
-        System.out.println(order);
+        Order stubOrder = orderService.order(order, orderItemDTOList);
         // then
-        assertThat(order.getOrderId()).isEqualTo(ORDER_ID);
-        assertThat(order.getUserId()).isEqualTo(USER_ID);
-        assertThat(order.getTotalPaymentAmount()).isEqualTo(100000);
-        assertThat(order.getTotalQuantity()).isEqualTo(1);
+        assertThat(stubOrder.getOrderId()).isEqualTo(ORDER_ID);
+        assertThat(stubOrder.getUserId()).isEqualTo(USER_ID);
+        assertThat(stubOrder.getTotalPaymentAmount()).isEqualTo(100000);
+        assertThat(stubOrder.getTotalQuantity()).isEqualTo(1);
     }
 
+    @Test
+    @DisplayName("Order가 null일 때 예외 발생")
+    void shouldThrowExceptionWhenOrderIsNull() {
+        List<OrderItemDTO> orderItems = new ArrayList<>();
+        orderItems.add(OrderItemDTO.builder().productId(1L).paymentAmount(1000).quantity(1).build());
+
+        assertThatThrownBy(() -> orderService.order(null, orderItems))
+                .isInstanceOf(OrderException.class)
+                .hasMessageContaining("Order cannot be null");
+    }
+    @Test
+    @DisplayName("OrderItems가 null일 때 예외 발생")
+    void shouldThrowExceptionWhenOrderItemsAreNull() {
+        Order order = Order.builder().userId(1L).totalPaymentAmount(1000).totalQuantity(1).build();
+
+        assertThatThrownBy(() -> orderService.order(order, null))
+                .isInstanceOf(OrderException.class)
+                .hasMessageContaining("Order items cannot be null or empty");
+    }
+
+    @Test
+    @DisplayName("OrderItems가 비어 있을 때 예외 발생")
+    void shouldThrowExceptionWhenOrderItemsAreEmpty() {
+        Order order = Order.builder().userId(1L).totalPaymentAmount(1000).totalQuantity(1).build();
+        List<OrderItemDTO> orderItems = new ArrayList<>();
+
+        assertThatThrownBy(() -> orderService.order(order, orderItems))
+                .isInstanceOf(OrderException.class)
+                .hasMessageContaining("Order items cannot be null or empty");
+    }
+    @Test
+    @DisplayName("OrderItemDTO의 Product ID가 유효하지 않을 때 예외 발생")
+    void shouldThrowExceptionWhenProductIdIsInvalid() {
+        Order order = Order.builder().userId(1L).totalPaymentAmount(1000).totalQuantity(1).build();
+        List<OrderItemDTO> orderItems = new ArrayList<>();
+        orderItems.add(OrderItemDTO.builder().productId(-1L).paymentAmount(1000).quantity(1).build());
+
+        assertThatThrownBy(() -> orderService.order(order, orderItems))
+                .isInstanceOf(OrderException.class)
+                .hasMessageContaining("Product ID must be greater than 0");
+    }
+
+    @Test
+    @DisplayName("OrderItemDTO의 PaymentAmount가 유효하지 않을 때 예외 발생")
+    void shouldThrowExceptionWhenPaymentAmountIsInvalid() {
+        Order order = Order.builder().userId(1L).totalPaymentAmount(1000).totalQuantity(1).build();
+        List<OrderItemDTO> orderItems = new ArrayList<>();
+        orderItems.add(OrderItemDTO.builder().productId(1L).paymentAmount(0).quantity(1).build());
+
+        assertThatThrownBy(() -> orderService.order(order, orderItems))
+                .isInstanceOf(OrderException.class)
+                .hasMessageContaining("Payment amount must be greater than 0");
+    }
+
+    @Test
+    @DisplayName("OrderItemDTO의 Quantity가 유효하지 않을 때 예외 발생")
+    void shouldThrowExceptionWhenQuantityIsInvalid() {
+        Order order = Order.builder().userId(1L).totalPaymentAmount(1000).totalQuantity(1).build();
+        List<OrderItemDTO> orderItems = new ArrayList<>();
+        orderItems.add(OrderItemDTO.builder().productId(1L).paymentAmount(1000).quantity(0).build());
+
+        assertThatThrownBy(() -> orderService.order(order, orderItems))
+                .isInstanceOf(OrderException.class)
+                .hasMessageContaining("Quantity must be greater than 0");
+    }
 }

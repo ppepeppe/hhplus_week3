@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.vo;
+package kr.hhplus.be.server.common.exception.vo;
 
 import lombok.Getter;
 
@@ -67,6 +67,12 @@ public enum ErrorCode {
 
     // Transaction Delete Error
     DELETE_ERROR(200, "9999", "Delete Transaction Error Exception"),
+    // 사용자 조회 실패
+    USER_NOT_FOUND(404, "U001", "User not found"),
+    // 상품 조회 실패
+    PRODUCT_NOT_FOUND(404, "P001", "Product not found"),
+    // 상품 조회 실패
+    COUPON_FOUND_ERROR(404, "C001", "Coupon not found")
 
     ; // End
 

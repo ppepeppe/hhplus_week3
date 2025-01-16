@@ -6,12 +6,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ProductRepository {
-    Product findProductByProductId(long productId);
+    Optional<Product> findProductByProductId(long productId);
     Product save(Product product);
     Page<Product> findAll(Pageable pageable);
     List<Product> findAllById(Iterable<Long> ids);
     Product findByIdWithLock(Long productId);
+    void saveAll(List<Product> products);
 }

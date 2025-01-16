@@ -20,4 +20,9 @@ public class UserPointRepositoryImpl implements UserPointRepository {
 
         return userPointJpaRepository.save(userPoint);
     }
+
+    @Override
+    public void flush() {
+        userPointJpaRepository.flush();
+    }
 }

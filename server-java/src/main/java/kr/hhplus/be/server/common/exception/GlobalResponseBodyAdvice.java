@@ -1,7 +1,7 @@
-package kr.hhplus.be.server.common;
+package kr.hhplus.be.server.common.exception;
 
-import kr.hhplus.be.server.vo.BaseResponseDto;
-import kr.hhplus.be.server.vo.ErrorResponse;
+import kr.hhplus.be.server.common.exception.vo.BaseResponseDto;
+import kr.hhplus.be.server.common.exception.vo.ErrorResponse;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
