@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.unit;
+package kr.hhplus.be.server.unit.payment;
 
 import kr.hhplus.be.server.apps.payment.domain.models.Payment;
 import kr.hhplus.be.server.apps.payment.domain.models.TransactionType;

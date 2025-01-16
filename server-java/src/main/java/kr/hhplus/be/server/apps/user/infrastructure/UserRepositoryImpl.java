@@ -1,9 +1,11 @@
 package kr.hhplus.be.server.apps.user.infrastructure;
 
-import kr.hhplus.be.server.apps.user.domain.repository.UserRepository;
 import kr.hhplus.be.server.apps.user.domain.models.entity.User;
+import kr.hhplus.be.server.apps.user.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -12,7 +14,7 @@ public class UserRepositoryImpl implements UserRepository {
 
 
     @Override
-    public User findUserByUserId(Long userId) {
+    public Optional<User> findUserByUserId(Long userId) {
         return userJPARepository.findUserByUserId(userId);
     }
 

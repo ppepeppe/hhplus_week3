@@ -2,7 +2,6 @@ package kr.hhplus.be.server.apps.user.infrastructure;
 
 import kr.hhplus.be.server.apps.user.domain.models.entity.UserPoint;
 import kr.hhplus.be.server.apps.user.domain.repository.UserPointRepository;
-import kr.hhplus.be.server.apps.user.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -19,5 +18,10 @@ public class UserPointRepositoryImpl implements UserPointRepository {
     public UserPoint save(UserPoint userPoint) {
 
         return userPointJpaRepository.save(userPoint);
+    }
+
+    @Override
+    public void flush() {
+        userPointJpaRepository.flush();
     }
 }

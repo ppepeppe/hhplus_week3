@@ -1,7 +1,6 @@
 package kr.hhplus.be.server.apps.order.application.usecase;
 
 import jakarta.transaction.Transactional;
-import kr.hhplus.be.server.apps.order.domain.models.dto.OrderDto;
 import kr.hhplus.be.server.apps.order.domain.models.dto.OrderItemDTO;
 import kr.hhplus.be.server.apps.order.domain.models.entity.Order;
 import kr.hhplus.be.server.apps.order.domain.service.OrderService;
@@ -18,8 +17,7 @@ public class OrderUseCase {
     private final PaymentService paymentService;
     // 주문 생성
     @Transactional
-    public Order createOrder(OrderDto orderDto, List<OrderItemDTO> orderItems) {
-
-        return orderService.order(orderDto, orderItems);
+    public void createOrder(Order order, List<OrderItemDTO> orderItems) {
+        orderService.order(order, orderItems);
     }
 }

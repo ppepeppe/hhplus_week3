@@ -1,8 +1,9 @@
-package kr.hhplus.be.server.unit;
+package kr.hhplus.be.server.unit.product;
 
 import kr.hhplus.be.server.apps.product.domain.models.Product;
 import kr.hhplus.be.server.apps.product.domain.repository.ProductRepository;
 import kr.hhplus.be.server.apps.product.domain.service.ProductService;
+import kr.hhplus.be.server.common.exception.ProductNotFoundException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,8 +13,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -32,7 +35,7 @@ public class ProductServiceTest {
     @DisplayName("상품ID로 해당 상품을 조회한다.")
     void shouldRetrieveProductByUserIdSuccessfully() {
         // given
-        when(productRepository.findProductByProductId(PRODUCT_ID)).thenReturn(new Product(PRODUCT_ID, "패딩", 100000, 10, 0));
+        when(productRepository.findProductByProductId(PRODUCT_ID)).thenReturn(Optional.of(new Product(PRODUCT_ID, "패딩", 100000, 10, 0)));
         // when
         Product product = productService.getProductByProductId(PRODUCT_ID);
 
@@ -44,8 +47,49 @@ public class ProductServiceTest {
 
     }
     /**
-     * TODO 상품ID 없는 경우 테스트
+     * 상품ID가 없는 상품을 죄회합니다
      */
+    @Test
+    @DisplayName("Product ID로 조회 시 존재하지 않는 경우 예외 발생")
+    void shouldThrowExceptionWhenProductNotFound() {
+        Long invalidProductId = 999L; // 존재하지 않는 상품 ID
+        when(productRepository.findProductByProductId(invalidProductId))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> productService.getProductByProductId(invalidProductId))
+                .isInstanceOf(ProductNotFoundException.class)
+                .hasMessageContaining("Product not found with ID: " + invalidProductId);
+    }
+    /**
+     * 재고 부족시 예외처리를 테스트합니다
+     */
+    @Test
+    @DisplayName("재고 부족으로 주문 실패 시 예외 발생")
+    void shouldThrowExceptionWhenStockInsufficient() {
+        Long productId = 1L;
+        int orderQuantity = 10;
+
+        Product product = new Product(productId, "Test Product", 1000, 5, 0);
+        when(productRepository.findByIdWithLock(productId)).thenReturn(product);
+
+        assertThatThrownBy(() -> productService.orderProduct(productId, orderQuantity))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("재고 부족으로 주문 실패" + productId);
+    }
+    /**
+     * 0 또는 음수의 수량 주문시 예외처리합니다.
+     */
+    @Test
+    @DisplayName("잘못된 주문 수량으로 주문 실패 시 예외 발생")
+    void shouldThrowExceptionWhenOrderQuantityInvalid() {
+        assertThatThrownBy(() -> productService.orderProduct(1L, 0))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Order quantity must be greater than 0");
+
+        assertThatThrownBy(() -> productService.orderProduct(1L, -1))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Order quantity must be greater than 0");
+    }
     /**
      * 상품 ID로 상품 재고 차감의 성공 케이스를 테스트 합니다.
      */
