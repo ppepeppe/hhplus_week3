@@ -8,13 +8,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
 public class ProductRepositoryImpl implements ProductRepository {
     public final ProductJpaRepository productJpaRepository;
     @Override
-    public Product findProductByProductId(long productId) {
+    public Optional<Product> findProductByProductId(long productId) {
         return productJpaRepository.findProductByProductId(productId);
     }
 
@@ -36,6 +37,11 @@ public class ProductRepositoryImpl implements ProductRepository {
     @Override
     public Product findByIdWithLock(Long productId) {
         return productJpaRepository.findByIdWithLock(productId);
+    }
+
+    @Override
+    public void saveAll(List<Product> products) {
+        productJpaRepository.saveAll(products);
     }
 
 

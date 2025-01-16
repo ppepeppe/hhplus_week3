@@ -8,9 +8,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.Optional;
+
 
 public interface ProductJpaRepository extends JpaRepository<Product, Long> {
-    Product findProductByProductId(long productId);
+    Optional<Product> findProductByProductId(long productId);
     // 페이지네이션 지원 메서드
     Page<Product> findAll(Pageable pageable);
     @Lock(LockModeType.PESSIMISTIC_WRITE)

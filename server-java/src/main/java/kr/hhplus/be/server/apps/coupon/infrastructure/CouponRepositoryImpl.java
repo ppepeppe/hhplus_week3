@@ -1,7 +1,6 @@
 package kr.hhplus.be.server.apps.coupon.infrastructure;
 
 import kr.hhplus.be.server.apps.coupon.domain.models.Coupon;
-import kr.hhplus.be.server.apps.coupon.domain.models.UserCoupon;
 import kr.hhplus.be.server.apps.coupon.domain.repository.CouponRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;

@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.unit;
+package kr.hhplus.be.server.unit.stats;
 
 import kr.hhplus.be.server.apps.stats.domain.repository.SalesStatsRepository;
 import kr.hhplus.be.server.apps.stats.domain.service.SalesStatsService;
