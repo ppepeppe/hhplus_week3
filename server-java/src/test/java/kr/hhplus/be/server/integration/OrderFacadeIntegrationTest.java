@@ -72,7 +72,14 @@ public class OrderFacadeIntegrationTest {
         paymentRepository.save(payment);
 
         // Coupon 초기화
-        Coupon coupon = new Coupon(null, "TESTCODE", 0.25, LocalDate.of(2025, 1, 11), 30, 0);
+        // Coupon 초기화
+        Coupon coupon = Coupon.builder()
+                .code("TESTCODE")
+                .discountPercent(0.25)
+                .validDate(LocalDate.of(2025, 1, 11))
+                .maxCount(30)
+                .currentCount(0)
+                .build();
         couponRepository.save(coupon);
 
         // UserCoupon 초기화

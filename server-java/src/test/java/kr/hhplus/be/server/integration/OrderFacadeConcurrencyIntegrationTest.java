@@ -73,18 +73,25 @@ public class OrderFacadeConcurrencyIntegrationTest {
         paymentRepository.save(payment);
 
         // Coupon 초기화
-        Coupon coupon = new Coupon(null, "TESTCODE", 0.25, LocalDate.of(2025, 1, 11), 30, 0);
+        Coupon coupon = Coupon.builder()
+                .code("TESTCODE")
+                .discountPercent(0.25)
+                .validDate(LocalDate.of(2025, 1, 11))
+                .maxCount(30)
+                .currentCount(0)
+                .build();
         couponRepository.save(coupon);
 
         // UserCoupon 초기화
-        UserCoupon userCoupon = new UserCoupon(null, user.getUserId(), coupon.getCouponId(), false);
+        UserCoupon userCoupon = UserCoupon.builder()
+                .userId(user.getUserId())
+                .couponId(coupon.getCouponId())
+                .isUsed(false)
+                .build();
+
         userCouponRepository.save(userCoupon);
 
-        System.out.println("여기111긴해 ");
-        System.out.println(userPointRepository.findUserPointByUserId(1L));
         userPointRepository.flush();
-        System.out.println("여기222긴해 ");
-        System.out.println(userPointRepository.findUserPointByUserId(1L));
 
     }
 
@@ -92,8 +99,6 @@ public class OrderFacadeConcurrencyIntegrationTest {
     public void testConcurrentOrders() throws InterruptedException {
         int numberOfUsers = 11; // 11명의 사용자
         ExecutorService executorService = Executors.newFixedThreadPool(numberOfUsers);
-        System.out.println("여기긴해 ");
-        System.out.println(userPointRepository.findUserPointByUserId(1L));
         for (int i = 0; i < numberOfUsers; i++) {
             executorService.submit(() -> {
                 try {

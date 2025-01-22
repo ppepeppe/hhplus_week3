@@ -1,6 +1,5 @@
 package kr.hhplus.be.server.apps.coupon.domain.service;
 
-import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.apps.coupon.domain.models.UserCoupon;
 import kr.hhplus.be.server.apps.coupon.domain.repository.UserCouponRepository;
 import kr.hhplus.be.server.common.exception.InvalidCouponException;
@@ -18,7 +17,6 @@ public class UserCouponService {
     /**
      * 쿠폰발급
      */
-    @Transactional
     public UserCoupon issueCoupon(Long userId, Long couponId) {
         if (userId == null || couponId == null) {
             throw new IllegalArgumentException("User ID and Coupon ID cannot be null.");

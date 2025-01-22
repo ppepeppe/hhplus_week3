@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.apps.coupon.application.usecase;
 
+import jakarta.persistence.OptimisticLockException;
 import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.apps.coupon.domain.models.Coupon;
 import kr.hhplus.be.server.apps.coupon.domain.models.UserCoupon;
@@ -20,21 +21,38 @@ public class CouponUseCase {
 
     @Transactional
     public UserCoupon issueCoupon(Long userId, Long couponId) {
-        // 쿠폰을 비관적 락으로 조회
-        Coupon coupon = couponService.getCouponWithLock(couponId);
-
-        // 발급 가능 여부 확인
-        if (coupon.getCurrentCount() >= coupon.getMaxCount()) {
-            throw new IllegalArgumentException("쿠폰 수량 부족");
+        if (userId == null || couponId == null) {
+            throw new IllegalArgumentException("User ID and Coupon ID cannot be null.");
         }
 
-        // 쿠폰 발급 수 증가
-        coupon.setCurrentCount(coupon.getCurrentCount() + 1);
-        // 변경된 쿠폰 저장
-        couponService.saveCoupon(coupon);
+        int retryCount = 0;
+        while (retryCount < 3) {
+            try {
+                // 쿠폰 조회
+                Coupon coupon = couponService.getCouponById(couponId);
 
-        // UserCoupon 발급
-        return userCouponService.issueCoupon(userId, couponId);
+                // 발급 가능 여부 확인
+                if (coupon.getCurrentCount() >= coupon.getMaxCount()) {
+                    throw new IllegalArgumentException("쿠폰 수량 부족");
+                }
+
+                // 쿠폰 발급 수 증가
+                coupon.setCurrentCount(coupon.getCurrentCount() + 1);
+
+                // 변경된 쿠폰 저장 (낙관적 락 검증)
+                couponService.saveCoupon(coupon);
+
+                // UserCoupon 발급
+                return userCouponService.issueCoupon(userId, couponId);
+            } catch (OptimisticLockException e) {
+                retryCount++;
+                if (retryCount == 3) {
+                    throw new RuntimeException("쿠폰 발급에 실패했습니다");
+                }
+            }
+        }
+
+        throw new RuntimeException("쿠폰 발급 중 문제가 발생했습니다.");
     }
 
     public double applyCouponDiscount(Long userId, Long couponId, double totalAmount) {

@@ -49,7 +49,7 @@ public class CouponUseCaseTest {
         userRepository.save(user);
 
         // Coupon 초기화
-        Coupon coupon = new Coupon(null, "TESTCODE", 0.25, LocalDate.of(2025, 1, 11), 30, 0);
+        Coupon coupon = new Coupon(null, "TESTCODE", 0.25, LocalDate.of(2025, 1, 11), 30, 0, 0);
         couponRepository.save(coupon);
 
         // UserCoupon 초기화
