@@ -30,7 +30,11 @@ public class UserPointService {
      */
     public UserPoint orderUserPoint(long userId, Integer point) {
         UserPoint userPoint = userPointRepository.findUserPointByUserIdWithLock(userId);
-
+        // 포인트 부족 여부 확인
+        if (userPoint.getPoint() < point) {
+            throw new IllegalArgumentException(String.format("포인트 부족: 사용 가능한 포인트는 %d, 차감하려는 포인트는 %d입니다.",
+                    userPoint.getPoint(), point));
+        }
         userPoint.setPoint(userPoint.getPoint() - point);
 
         return userPointRepository.save(userPoint);

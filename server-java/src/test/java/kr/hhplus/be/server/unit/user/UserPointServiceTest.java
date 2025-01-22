@@ -123,7 +123,7 @@ public class UserPointServiceTest {
         // given
         int point = 200000;
         int price = 100000;
-        when(userPointRepository.findUserPointByUserId(USER_ID))
+        when(userPointRepository.findUserPointByUserIdWithLock(USER_ID))
                 .thenReturn(new UserPoint(USER_ID, point));
         when(userPointRepository.save(new UserPoint(USER_ID, point - price)))
                 .thenReturn(new UserPoint(USER_ID, point - price));
@@ -135,5 +135,26 @@ public class UserPointServiceTest {
         assertThat(userPoint.getUserId()).isEqualTo(USER_ID);
         assertThat(userPoint.getPoint()).isEqualTo(point-price);
 
+    }
+
+    @Test
+    @DisplayName("포인트 차감 실패: 차감하려는 포인트가 현재 포인트를 초과할 때 예외 발생")
+    void shouldFailWhenDeductingMorePointsThanAvailable() {
+        // Given
+        long userId = 1L;
+        UserPoint userPoint = new UserPoint(null, userId, 1000); // 현재 포인트는 1000
+        when(userPointRepository.findUserPointByUserIdWithLock(USER_ID))
+                .thenReturn(userPoint);;
+
+        // When & Then
+        Integer deductPoints = 2000;
+        assertThatThrownBy(() -> userPointService.orderUserPoint(userId, deductPoints))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining(String.format("포인트 부족: 사용 가능한 포인트는 %d, 차감하려는 포인트는 %d입니다.",
+                        userPoint.getPoint(), 2000));
+
+        // 포인트가 변하지 않았는지 확인
+        UserPoint updatedUserPoint = userPointRepository.findUserPointByUserIdWithLock(userId);
+        assertThat(updatedUserPoint.getPoint()).isEqualTo(1000);
     }
 }

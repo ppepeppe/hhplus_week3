@@ -17,6 +17,7 @@ import kr.hhplus.be.server.apps.user.domain.repository.UserPointRepository;
 import kr.hhplus.be.server.apps.user.domain.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -150,6 +151,7 @@ public class OrderFacadeConcurrencyIntegrationTest {
     }
 
     @Test
+    @DisplayName("동시에 11명의 사용자가 상품 개수 10개인 상품을 동시에 주문(비관적락)")
     public void testConcurrentOrders() throws InterruptedException {
         int numberOfUsers = 12; // 10명의 사용자
         ExecutorService executorService = Executors.newFixedThreadPool(numberOfUsers);
