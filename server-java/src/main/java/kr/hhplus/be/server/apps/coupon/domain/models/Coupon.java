@@ -23,7 +23,5 @@ public class Coupon {
     private LocalDate validDate;
     private Integer maxCount;
     private Integer currentCount;
-    @Version
-    private int version;
 
 }
