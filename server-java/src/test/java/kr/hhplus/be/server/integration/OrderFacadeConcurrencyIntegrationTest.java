@@ -80,11 +80,7 @@ public class OrderFacadeConcurrencyIntegrationTest {
         UserCoupon userCoupon = new UserCoupon(null, user.getUserId(), coupon.getCouponId(), false);
         userCouponRepository.save(userCoupon);
 
-        System.out.println("여기111긴해 ");
-        System.out.println(userPointRepository.findUserPointByUserId(1L));
         userPointRepository.flush();
-        System.out.println("여기222긴해 ");
-        System.out.println(userPointRepository.findUserPointByUserId(1L));
 
     }
 
@@ -92,8 +88,6 @@ public class OrderFacadeConcurrencyIntegrationTest {
     public void testConcurrentOrders() throws InterruptedException {
         int numberOfUsers = 11; // 11명의 사용자
         ExecutorService executorService = Executors.newFixedThreadPool(numberOfUsers);
-        System.out.println("여기긴해 ");
-        System.out.println(userPointRepository.findUserPointByUserId(1L));
         for (int i = 0; i < numberOfUsers; i++) {
             executorService.submit(() -> {
                 try {

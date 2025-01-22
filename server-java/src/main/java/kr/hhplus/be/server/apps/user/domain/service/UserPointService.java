@@ -30,9 +30,11 @@ public class UserPointService {
      */
     public UserPoint orderUserPoint(long userId, Integer point) {
         UserPoint userPoint = userPointRepository.findUserPointByUserId(userId);
+        if (userPoint.getPoint() < point) {
+            throw new IllegalArgumentException("포인트 부족 user ID: " + userId);
+        }
 
         userPoint.setPoint(userPoint.getPoint() - point);
-
         return userPointRepository.save(userPoint);
     }
 }

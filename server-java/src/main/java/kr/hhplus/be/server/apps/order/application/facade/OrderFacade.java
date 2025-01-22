@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.apps.order.application.facade;
 
+import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.apps.coupon.application.usecase.CouponUseCase;
 import kr.hhplus.be.server.apps.order.application.usecase.OrderUseCase;
 import kr.hhplus.be.server.apps.order.application.usecase.PaymentUseCase;
@@ -19,6 +20,7 @@ public class OrderFacade {
     private final OrderDataSender orderDataSender;
     private final CouponUseCase couponUseCase;
 
+    @Transactional
     public Order placeOrder(Long userId, Long couponId, List<OrderItemDTO> orderItems) {
         Integer totalPaymentAmount = 0;
         Integer totalQuantity = 0;
@@ -41,7 +43,6 @@ public class OrderFacade {
         orderUseCase.createOrder(order, orderItems);
         // 외부 플랫폼 전송
         orderDataSender.sendOrderData(order);
-        System.out.println(order);
         return order;
     }
 }
