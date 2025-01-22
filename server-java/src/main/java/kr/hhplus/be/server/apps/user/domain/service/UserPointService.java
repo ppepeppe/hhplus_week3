@@ -29,7 +29,7 @@ public class UserPointService {
      * 주문시 포인트 차감
      */
     public UserPoint orderUserPoint(long userId, Integer point) {
-        UserPoint userPoint = userPointRepository.findUserPointByUserId(userId);
+        UserPoint userPoint = userPointRepository.findUserPointByUserIdWithLock(userId);
 
         userPoint.setPoint(userPoint.getPoint() - point);
 

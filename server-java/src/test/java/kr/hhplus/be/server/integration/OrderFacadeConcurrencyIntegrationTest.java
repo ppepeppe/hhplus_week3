@@ -25,6 +25,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
@@ -61,17 +63,28 @@ public class OrderFacadeConcurrencyIntegrationTest {
         // Product 초기화
         Product productA = new Product(null, "Product A", 1000, 10, 0);
         productRepository.save(productA);
-        // User 초기화
-        User user = new User(null, "seongdo");
-        userRepository.save(user);
-
-        // UserPoint 초기화
-        UserPoint userPoint = new UserPoint(null, user.getUserId(), 200000);
-        userPointRepository.save(userPoint);
-        // Payment 초기화
-        Payment payment = new Payment(null, user.getUserId(), 100000, TransactionType.CHARGE);
-        paymentRepository.save(payment);
-
+//        // User 초기화
+//        User user = new User(null, "seongdo");
+//        userRepository.save(user);
+//
+//        // UserPoint 초기화
+//        UserPoint userPoint = new UserPoint(null, user.getUserId(), 200000);
+//        userPointRepository.save(userPoint);
+        // User 및 UserPoint 초기화
+        List<User> users = Arrays.asList(
+                new User(null, "seongdo"),
+                new User(null, "john"),
+                new User(null, "jane"),
+                new User(null, "alice"),
+                new User(null, "bob"),
+                new User(null, "charlie"),
+                new User(null, "david"),
+                new User(null, "eve"),
+                new User(null, "frank"),
+                new User(null, "grace"),
+                new User(null, "hannah"),
+                new User(null, "ivan")
+        );
         // Coupon 초기화
         Coupon coupon = Coupon.builder()
                 .code("TESTCODE")
@@ -81,25 +94,67 @@ public class OrderFacadeConcurrencyIntegrationTest {
                 .currentCount(0)
                 .build();
         couponRepository.save(coupon);
+        List<UserPoint> userPoints = new ArrayList<>();
 
-        // UserCoupon 초기화
-        UserCoupon userCoupon = UserCoupon.builder()
-                .userId(user.getUserId())
-                .couponId(coupon.getCouponId())
-                .isUsed(false)
-                .build();
+        for (User user : users) {
+            userRepository.save(user);
 
-        userCouponRepository.save(userCoupon);
+            // 각 User에 대한 초기 포인트 설정
+            int initialPoint = 100000 + (int) (Math.random() * 100000); // 10만 ~ 20만 포인트 랜덤 설정
+            userPoints.add(new UserPoint(null, user.getUserId(), initialPoint));
+            Payment payment = new Payment(null, user.getUserId(), initialPoint, TransactionType.CHARGE);
+            paymentRepository.save(payment);
+            // UserCoupon 초기화
+            UserCoupon userCoupon = UserCoupon.builder()
+                    .userId(user.getUserId())
+                    .couponId(coupon.getCouponId())
+                    .isUsed(false)
+                    .build();
 
-        userPointRepository.flush();
+            userCouponRepository.save(userCoupon);
+
+            userPointRepository.flush();
+
+
+        }
+
+        // UserPoint 저장
+        for (UserPoint userPoint : userPoints) {
+            userPointRepository.save(userPoint);
+        }
+//        // Payment 초기화
+//        Payment payment = new Payment(null, user.getUserId(), 100000, TransactionType.CHARGE);
+//        paymentRepository.save(payment);
+
+//        // Coupon 초기화
+//        Coupon coupon = Coupon.builder()
+//                .code("TESTCODE")
+//                .discountPercent(0.25)
+//                .validDate(LocalDate.of(2025, 1, 11))
+//                .maxCount(30)
+//                .currentCount(0)
+//                .build();
+//        couponRepository.save(coupon);
+
+//        // UserCoupon 초기화
+//        UserCoupon userCoupon = UserCoupon.builder()
+//                .userId(user.getUserId())
+//                .couponId(coupon.getCouponId())
+//                .isUsed(false)
+//                .build();
+//
+//        userCouponRepository.save(userCoupon);
+//
+//        userPointRepository.flush();
 
     }
 
     @Test
     public void testConcurrentOrders() throws InterruptedException {
-        int numberOfUsers = 11; // 11명의 사용자
+        int numberOfUsers = 12; // 10명의 사용자
         ExecutorService executorService = Executors.newFixedThreadPool(numberOfUsers);
-        for (int i = 0; i < numberOfUsers; i++) {
+        for (int i = 1; i < numberOfUsers; i++) {
+            final long userId = i;
             executorService.submit(() -> {
                 try {
 
@@ -109,9 +164,12 @@ public class OrderFacadeConcurrencyIntegrationTest {
                             .quantity(1)
                             .build();
 
-                    orderFacade.placeOrder(1L, 0L, List.of(orderItemDTO));
+                    orderFacade.placeOrder(userId, 0L, List.of(orderItemDTO));
+                    System.out.println("User " + userId + " 주문 성공.");
+
+
                 } catch (Exception e) {
-                    System.out.println("주문 실패: " + e.getMessage());
+                    System.out.println("User " + userId + e.getMessage());
                 }
             });
         }
