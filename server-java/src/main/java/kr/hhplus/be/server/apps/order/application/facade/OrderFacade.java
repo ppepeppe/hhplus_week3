@@ -49,7 +49,6 @@ public class OrderFacade {
     public Order placeOrder(Long userId, Long couponId, List<OrderItemDTO> orderItems) {
         Integer totalPaymentAmount = 0;
         Integer totalQuantity = 0;
-        System.out.println("호출후" + userId);
         // 총 금액 및 총 수량 계산
         for (OrderItemDTO orderItem : orderItems) {
             totalPaymentAmount += orderItem.getPaymentAmount();
