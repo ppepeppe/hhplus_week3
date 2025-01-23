@@ -62,7 +62,7 @@ public class OrderFacadeConcurrencyIntegrationTest {
     @BeforeEach
     void setUp() {
         // Product 초기화
-        Product productA = new Product(null, "Product A", 1000, 10, 0);
+        Product productA = new Product(null, "Product A", 1000, 10, 0, 0);
         productRepository.save(productA);
 //        // User 초기화
 //        User user = new User(null, "seongdo");
@@ -165,13 +165,13 @@ public class OrderFacadeConcurrencyIntegrationTest {
                             .paymentAmount(1000)
                             .quantity(1)
                             .build();
-
+                    System.out.println("호출전" + userId);
                     orderFacade.placeOrder(userId, 0L, List.of(orderItemDTO));
                     System.out.println("User " + userId + " 주문 성공.");
 
 
                 } catch (Exception e) {
-                    System.out.println("User " + userId + e.getMessage());
+                    System.out.println("User " + userId + "주문 실패");
                 }
             });
         }

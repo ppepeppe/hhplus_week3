@@ -35,7 +35,7 @@ public class ProductServiceTest {
     @DisplayName("상품ID로 해당 상품을 조회한다.")
     void shouldRetrieveProductByUserIdSuccessfully() {
         // given
-        when(productRepository.findProductByProductId(PRODUCT_ID)).thenReturn(Optional.of(new Product(PRODUCT_ID, "패딩", 100000, 10, 0)));
+        when(productRepository.findProductByProductId(PRODUCT_ID)).thenReturn(Optional.of(new Product(PRODUCT_ID, "패딩", 100000, 10, 0, 0)));
         // when
         Product product = productService.getProductByProductId(PRODUCT_ID);
 
@@ -69,7 +69,7 @@ public class ProductServiceTest {
         Long productId = 1L;
         int orderQuantity = 10;
 
-        Product product = new Product(productId, "Test Product", 1000, 5, 0);
+        Product product = new Product(productId, "Test Product", 1000, 5, 0, 0);
         when(productRepository.findByIdWithLock(productId)).thenReturn(product);
 
         assertThatThrownBy(() -> productService.orderProduct(productId, orderQuantity))
@@ -97,8 +97,8 @@ public class ProductServiceTest {
     @DisplayName("상품ID로 해당 상품의 재고를 차감한다.")
     void shouldReduceProductStockSuccessfully() {
         // given
-        when(productRepository.findByIdWithLock(PRODUCT_ID)).thenReturn(new Product(PRODUCT_ID, "패딩", 100000, 10, 0));
-        when(productRepository.save(any(Product.class))).thenReturn(new Product(PRODUCT_ID, "패딩", 100000, 9, 0));
+        when(productRepository.findByIdWithLock(PRODUCT_ID)).thenReturn(new Product(PRODUCT_ID, "패딩", 100000, 10, 0, 0));
+        when(productRepository.save(any(Product.class))).thenReturn(new Product(PRODUCT_ID, "패딩", 100000, 9, 0, 0));
         // when
         Product product = productService.orderProduct(PRODUCT_ID, 1);
 
@@ -116,8 +116,8 @@ public class ProductServiceTest {
     @DisplayName("상품ID로 해당 상품의 판매량을 증가시킨다.")
     void shouldIncreaseProductStockSuccessfully() {
         // given
-        when(productRepository.findByIdWithLock(PRODUCT_ID)).thenReturn(new Product(PRODUCT_ID, "패딩", 100000, 10, 0));
-        when(productRepository.save(new Product(PRODUCT_ID, "패딩", 100000, 9, 1))).thenReturn(new Product(PRODUCT_ID, "패딩", 100000, 9, 1));
+        when(productRepository.findByIdWithLock(PRODUCT_ID)).thenReturn(new Product(PRODUCT_ID, "패딩", 100000, 10, 0, 0));
+        when(productRepository.save(new Product(PRODUCT_ID, "패딩", 100000, 9, 1, 0))).thenReturn(new Product(PRODUCT_ID, "패딩", 100000, 9, 1, 0));
         // when
         Product product = productService.orderProduct(PRODUCT_ID, 1);
 
@@ -141,6 +141,7 @@ public class ProductServiceTest {
                 .price(200000)
                 .quantity(10)
                 .sales(0)
+                .version(0)
                 .build();
         Product product2 = Product.builder()
                 .productId(2L)
@@ -148,6 +149,7 @@ public class ProductServiceTest {
                 .price(100000)
                 .quantity(10)
                 .sales(0)
+                .version(0)
                 .build();
         List<Product> productList = List.of(product1, product2);
 
