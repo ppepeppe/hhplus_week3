@@ -37,12 +37,12 @@ public class SalesStatsIntegrationTest {
     @BeforeEach
     void setUp() {
         // Product 초기화
-        Product productA = new Product(null, "Product A", 1000, 10, 0, 0);
-        Product productB = new Product(null, "Product B", 1500, 40, 25, 0);
-        Product productC = new Product(null, "Product C", 2000, 30, 20, 0);
-        Product productD = new Product(null, "Product D", 3000, 20, 15, 0);
-        Product productE = new Product(null, "Product E", 2500, 10, 5, 0);
-        Product productG = new Product(null, "Product G", 2500, 10, 5, 0);
+        Product productA = new Product(null, "Product A", 1000, 10, 0);
+        Product productB = new Product(null, "Product B", 1500, 40, 25);
+        Product productC = new Product(null, "Product C", 2000, 30, 20);
+        Product productD = new Product(null, "Product D", 3000, 20, 15);
+        Product productE = new Product(null, "Product E", 2500, 10, 5);
+        Product productG = new Product(null, "Product G", 2500, 10, 5);
         productRepository.saveAll(List.of(productA, productB, productC, productD, productE, productG));
 
         SalesStats stats1 = new SalesStats(null, 1L, 10, LocalDate.now().minusDays(2));

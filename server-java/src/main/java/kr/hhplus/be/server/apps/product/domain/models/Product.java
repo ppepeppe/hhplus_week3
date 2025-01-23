@@ -20,6 +20,5 @@ public class Product {
     private Integer price;
     private Integer quantity;
     private Integer sales;
-    @Version
-    private Integer version;
+
 }

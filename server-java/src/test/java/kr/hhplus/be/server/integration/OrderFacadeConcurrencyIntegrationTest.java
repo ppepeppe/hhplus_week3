@@ -62,7 +62,7 @@ public class OrderFacadeConcurrencyIntegrationTest {
     @BeforeEach
     void setUp() {
         // Product 초기화
-        Product productA = new Product(null, "Product A", 1000, 10, 0, 0);
+        Product productA = new Product(null, "Product A", 1000, 10, 0);
         productRepository.save(productA);
 //        // User 초기화
 //        User user = new User(null, "seongdo");
