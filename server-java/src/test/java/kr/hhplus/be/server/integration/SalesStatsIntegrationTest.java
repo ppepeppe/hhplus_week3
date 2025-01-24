@@ -7,6 +7,7 @@ import kr.hhplus.be.server.apps.stats.domain.models.SalesStats;
 import kr.hhplus.be.server.apps.stats.domain.repository.SalesStatsRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -56,6 +57,7 @@ public class SalesStatsIntegrationTest {
 
     }
     @Test
+    @DisplayName("판매량 top 5 성공 테스트")
     public void testGetProducts() {
         // given
         LocalDate nowDate = LocalDate.now();

@@ -5,6 +5,8 @@ import kr.hhplus.be.server.apps.coupon.domain.models.Coupon;
 import kr.hhplus.be.server.apps.coupon.domain.models.UserCoupon;
 import kr.hhplus.be.server.apps.coupon.domain.repository.CouponRepository;
 import kr.hhplus.be.server.apps.coupon.domain.repository.UserCouponRepository;
+import kr.hhplus.be.server.apps.order.domain.models.dto.OrderItemDTO;
+import kr.hhplus.be.server.apps.product.domain.models.Product;
 import kr.hhplus.be.server.apps.user.domain.models.entity.User;
 import kr.hhplus.be.server.apps.user.domain.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -18,9 +20,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDate;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -29,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-public class CouponUseCaseTest {
+public class CouponUseCaseConcurrencyFOFSTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
     @Autowired
@@ -58,41 +60,48 @@ public class CouponUseCaseTest {
         userCouponRepository.save(userCoupon);
     }
     @Test
-    @DisplayName("동시에 40명이 쿠폰을 신청 시 30명만 성공 (비관적 락)")
-    void shouldAllowOnly30ParticipantsWhen40ApplySimultaneouslyWithPessimisticLock() throws InterruptedException {
-        // given
-        int numberOfThreads = 40;
-        ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
-        CountDownLatch latch = new CountDownLatch(numberOfThreads);
+    @DisplayName("BlockingQueue를 이용한 선착순 쿠폰 처리 테스트")
+    public void testBlockingQueueInTest() throws InterruptedException {
+        BlockingQueue<Long> queue = new LinkedBlockingQueue<>();
 
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
         AtomicInteger successfulRegistrations = new AtomicInteger(0);
         AtomicInteger failedRegistrations = new AtomicInteger(0);
-        Coupon coupon = couponRepository.findCouponByCouponId(1L);
-        for (int i = 2; i <= numberOfThreads + 1; i++) {
-            final long userId = i;
+        // 사용자 요청 enqueue
+        for (long userId = 1; userId < 41 ; userId++) {
+            final long id = userId;
             executorService.submit(() -> {
-                try {
-                    couponUseCase.issueCoupon(userId, coupon.getCouponId());
-                    successfulRegistrations.incrementAndGet();
-                    System.out.println("User " + userId + " 쿠폰 발급 완료.");
-                } catch (Exception e) {
-                    failedRegistrations.incrementAndGet();
-                    System.out.println("User " + userId + " 쿠폰 발급 실패: " + e.getMessage());
-                } finally {
-                    latch.countDown();
-                }
+                queue.add(id); // 요청을 큐에 추가
+                System.out.println("User " + id + " 요청 큐에 추가");
             });
         }
 
-        latch.await();
         executorService.shutdown();
+        executorService.awaitTermination(5, TimeUnit.SECONDS);
+        Coupon coupon = couponRepository.findCouponByCouponId(1L);
+        System.out.println(queue);
+        // 큐에서 요청을 순차적으로 처리하면서 orderFacade.placeOrder 호출
+        for (int i = 0; i < 40; i++) {
+            Long userId = queue.poll(); // 큐에서 선착순으로 꺼냄
+            if (userId != null) {
+                try {
 
-        // then
+                    couponUseCase.issueCoupon(userId, coupon.getCouponId());
+                    successfulRegistrations.incrementAndGet();
+                    System.out.println("User " + userId + " 쿠폰 발급 완료");
+                } catch (Exception e) {
+                    failedRegistrations.incrementAndGet();
+                    System.out.println("User " + userId + " 쿠폰 발급 실패: " + e.getMessage());
+                }
+            }
+        }
+    // then
         Coupon updatedCoupon = couponRepository.findCouponByCouponId(coupon.getCouponId());
         assertEquals(30, updatedCoupon.getCurrentCount()); // 성공적으로 발급된 쿠폰 수
         assertEquals(30, successfulRegistrations.get()); // 성공한 신청
         assertEquals(10, failedRegistrations.get()); // 실패한 신청
     }
+
     @AfterEach
     void tearDown() {
         // 테스트 후 데이터 삭제

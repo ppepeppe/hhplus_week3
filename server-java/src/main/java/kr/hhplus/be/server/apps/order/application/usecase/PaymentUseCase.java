@@ -17,12 +17,25 @@ public class PaymentUseCase {
     private final ProductService productService;
     private final UserCouponService userCouponService;
 
+//    public void handlePayment(Order order, List<OrderItemDTO> orderItemDTOList) {
+//        // 주문시 포인트 변경
+//        userPointService.orderUserPoint(order.getUserId(), order.getTotalPaymentAmount());
+//        // 주문시 상품정보 변경
+//        for (OrderItemDTO orderItemDTO : orderItemDTOList) {
+//            productService.orderProduct(orderItemDTO.getProductId(), orderItemDTO.getQuantity());
+//        }
+//    }
     public void handlePayment(Order order, List<OrderItemDTO> orderItemDTOList) {
-        // 주문시 포인트 변경
+        // 주문 시 포인트 차감
         userPointService.orderUserPoint(order.getUserId(), order.getTotalPaymentAmount());
-        // 주문시 상품정보 변경
+
+        // 주문 시 상품 정보 변경
         for (OrderItemDTO orderItemDTO : orderItemDTOList) {
-            productService.orderProduct(orderItemDTO.getProductId(), orderItemDTO.getQuantity());
+            try {
+                productService.orderProduct(orderItemDTO.getProductId(), orderItemDTO.getQuantity());
+            } catch (RuntimeException e) {
+                throw new RuntimeException("상품 정보 업데이트 중 문제가 발생했습니다: " + e.getMessage(), e);
+            }
         }
     }
 }

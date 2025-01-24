@@ -9,6 +9,12 @@ import org.springframework.stereotype.Repository;
 @RequiredArgsConstructor
 public class UserPointRepositoryImpl implements UserPointRepository {
     private final UserPointJpaRepository userPointJpaRepository;
+
+    @Override
+    public UserPoint findUserPointByUserIdWithLock(Long userId) {
+        return userPointJpaRepository.findUserPointByUserIdWithLock(userId);
+    }
+
     @Override
     public UserPoint findUserPointByUserId(Long userId) {
         return userPointJpaRepository.findUserPointByUserId(userId);

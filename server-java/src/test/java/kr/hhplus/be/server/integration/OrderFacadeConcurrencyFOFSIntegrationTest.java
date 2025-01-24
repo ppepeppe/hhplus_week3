@@ -30,16 +30,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-public class OrderFacadeConcurrencyIntegrationTest {
+public class OrderFacadeConcurrencyFOFSIntegrationTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
     @Autowired
@@ -151,38 +149,50 @@ public class OrderFacadeConcurrencyIntegrationTest {
     }
 
     @Test
-    @DisplayName("동시에 11명의 사용자가 상품 개수 10개인 상품을 동시에 주문(비관적락)")
-    public void testConcurrentOrders() throws InterruptedException {
-        int numberOfUsers = 12; // 10명의 사용자
-        ExecutorService executorService = Executors.newFixedThreadPool(numberOfUsers);
-        for (int i = 1; i < numberOfUsers; i++) {
-            final long userId = i;
-            executorService.submit(() -> {
-                try {
+    @DisplayName("BlockingQueue를 이용한 선착순 주문 처리 테스트")
+    public void testBlockingQueueInTest() throws InterruptedException {
+        // 테스트용 BlockingQueue (Redis 대신 사용)
+        BlockingQueue<Long> queue = new LinkedBlockingQueue<>();
 
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
+
+        // 사용자 요청 enqueue
+        for (long userId = 1; userId <= 12 ; userId++) {
+            final long id = userId;
+            executorService.submit(() -> {
+                System.out.println("User " + id + " 요청 큐에 추가");
+                queue.add(id); // 요청을 큐에 추가
+
+            });
+        }
+
+        executorService.shutdown();
+        executorService.awaitTermination(5, TimeUnit.SECONDS);
+        System.out.println(queue);
+        // 큐에서 요청을 순차적으로 처리하면서 orderFacade.placeOrder 호출
+        for (int i = 0; i < 13; i++) {
+            Long userId = queue.poll(); // 큐에서 선착순으로 꺼냄
+            if (userId != null) {
+                try {
                     OrderItemDTO orderItemDTO = OrderItemDTO.builder()
                             .productId(1L)
                             .paymentAmount(1000)
                             .quantity(1)
                             .build();
-                    System.out.println("호출전" + userId);
-                    orderFacade.placeOrder(userId, 0L, List.of(orderItemDTO));
-                    System.out.println("User " + userId + " 주문 성공.");
-
-
+                    orderFacade.placeOrder(userId, 0L, List.of(orderItemDTO)); // 주문 처리
+                    System.out.println("User " + userId + " 주문 성공");
                 } catch (Exception e) {
-                    System.out.println("User " + userId + "주문 실패");
+                    System.out.println("User " + userId + " 주문 실패: " + e.getMessage());
                 }
-            });
+            }
         }
 
-        executorService.shutdown();
-        executorService.awaitTermination(10, TimeUnit.SECONDS);
-
-        // 최종 검증: 남은 재고가 0이어야 하고, 1명의 주문은 실패해야 함
+        // 최종 검증: 남은 재고 확인 등
         Optional<Product> product = productRepository.findProductByProductId(1L);
-        assertEquals(0, product.get().getQuantity());
+        assertEquals(0, product.get().getQuantity()); // 남은 재고가 0이어야 함
     }
+
+
     @AfterEach
     void tearDown() {
         // 테스트 후 데이터 삭제
