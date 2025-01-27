@@ -18,6 +18,7 @@ import kr.hhplus.be.server.apps.user.domain.repository.UserPointRepository;
 import kr.hhplus.be.server.apps.user.domain.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -72,7 +73,14 @@ public class OrderFacadeIntegrationTest {
         paymentRepository.save(payment);
 
         // Coupon 초기화
-        Coupon coupon = new Coupon(null, "TESTCODE", 0.25, LocalDate.of(2025, 1, 11), 30, 0);
+        // Coupon 초기화
+        Coupon coupon = Coupon.builder()
+                .code("TESTCODE")
+                .discountPercent(0.25)
+                .validDate(LocalDate.of(2025, 1, 11))
+                .maxCount(30)
+                .currentCount(0)
+                .build();
         couponRepository.save(coupon);
 
         // UserCoupon 초기화
@@ -81,6 +89,7 @@ public class OrderFacadeIntegrationTest {
     }
 
     @Test
+    @DisplayName("주문요청에 대한 성공 테스트")
     public void testOrderPlaceWithCoupon() {
         // given 주문 데이터 준비
         Order order = Order.builder()

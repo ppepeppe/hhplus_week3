@@ -1,6 +1,5 @@
 package kr.hhplus.be.server.apps.product.domain.service;
 
-import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.apps.product.domain.models.Product;
 import kr.hhplus.be.server.apps.product.domain.repository.ProductRepository;
 import kr.hhplus.be.server.common.exception.ProductNotFoundException;
@@ -27,7 +26,6 @@ public class ProductService {
     /**
      * 주문 시 상품 수량 차감, 판매량 증가
      */
-    @Transactional
     public Product orderProduct(long productId, Integer quantity) {
         if (quantity == null || quantity <= 0) {
             throw new IllegalArgumentException("Order quantity must be greater than 0");
