@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.unit.user;
+package kr.hhplus.be.server.unit.user.service;
 
 import kr.hhplus.be.server.apps.user.domain.models.entity.User;
 import kr.hhplus.be.server.apps.user.domain.repository.UserRepository;

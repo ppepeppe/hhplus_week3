@@ -67,7 +67,7 @@ public class CouponUseCaseTest {
 
         AtomicInteger successfulRegistrations = new AtomicInteger(0);
         AtomicInteger failedRegistrations = new AtomicInteger(0);
-        Coupon coupon = couponRepository.findCouponByCouponId(1L);
+        Coupon coupon = couponRepository.findCouponByCouponId(1L).get();
         for (int i = 2; i <= numberOfThreads + 1; i++) {
             final long userId = i;
             executorService.submit(() -> {
@@ -88,7 +88,7 @@ public class CouponUseCaseTest {
         executorService.shutdown();
 
         // then
-        Coupon updatedCoupon = couponRepository.findCouponByCouponId(coupon.getCouponId());
+        Coupon updatedCoupon = couponRepository.findCouponByCouponId(coupon.getCouponId()).get();
         assertEquals(30, updatedCoupon.getCurrentCount()); // 성공적으로 발급된 쿠폰 수
         assertEquals(30, successfulRegistrations.get()); // 성공한 신청
         assertEquals(10, failedRegistrations.get()); // 실패한 신청

@@ -64,13 +64,6 @@ public class OrderFacadeConcurrencyIntegrationTest {
         // Product 초기화
         Product productA = new Product(null, "Product A", 1000, 10, 0);
         productRepository.save(productA);
-//        // User 초기화
-//        User user = new User(null, "seongdo");
-//        userRepository.save(user);
-//
-//        // UserPoint 초기화
-//        UserPoint userPoint = new UserPoint(null, user.getUserId(), 200000);
-//        userPointRepository.save(userPoint);
         // User 및 UserPoint 초기화
         List<User> users = Arrays.asList(
                 new User(null, "seongdo"),
@@ -123,30 +116,6 @@ public class OrderFacadeConcurrencyIntegrationTest {
         for (UserPoint userPoint : userPoints) {
             userPointRepository.save(userPoint);
         }
-//        // Payment 초기화
-//        Payment payment = new Payment(null, user.getUserId(), 100000, TransactionType.CHARGE);
-//        paymentRepository.save(payment);
-
-//        // Coupon 초기화
-//        Coupon coupon = Coupon.builder()
-//                .code("TESTCODE")
-//                .discountPercent(0.25)
-//                .validDate(LocalDate.of(2025, 1, 11))
-//                .maxCount(30)
-//                .currentCount(0)
-//                .build();
-//        couponRepository.save(coupon);
-
-//        // UserCoupon 초기화
-//        UserCoupon userCoupon = UserCoupon.builder()
-//                .userId(user.getUserId())
-//                .couponId(coupon.getCouponId())
-//                .isUsed(false)
-//                .build();
-//
-//        userCouponRepository.save(userCoupon);
-//
-//        userPointRepository.flush();
 
     }
 
@@ -168,10 +137,9 @@ public class OrderFacadeConcurrencyIntegrationTest {
                     System.out.println("호출전" + userId);
                     orderFacade.placeOrder(userId, 0L, List.of(orderItemDTO));
                     System.out.println("User " + userId + " 주문 성공.");
-
-
                 } catch (Exception e) {
-                    System.out.println("User " + userId + "주문 실패");
+                    System.out.println("User " + userId + " 주문 실패: " + e.getMessage());
+
                 }
             });
         }

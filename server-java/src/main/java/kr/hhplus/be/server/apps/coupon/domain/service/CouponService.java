@@ -8,6 +8,8 @@ import kr.hhplus.be.server.common.exception.vo.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class CouponService {
@@ -18,11 +20,14 @@ public class CouponService {
      * 쿠폰조회 (비관적락)
      */
     public Coupon getCouponWithLock(Long couponId) {
-        Coupon coupon = couponRepository.findCouponByCouponIdWithLock(couponId);
-        if (coupon == null) {
-            throw new CouponNotFoundException(ErrorCode.COUPON_FOUND_ERROR, "Coupon not found with ID: " + couponId);
-        }
-        return coupon;
+
+        return couponRepository.findCouponByCouponIdWithLock(couponId)
+                .orElseThrow(() -> new CouponNotFoundException(ErrorCode.COUPON_FOUND_ERROR, "Coupon not found with ID: " + couponId));
+    }
+
+    public void incrementCouponUsage(Coupon coupon) {
+        coupon.incrementUsage(); // 도메인 객체 메서드 호출
+        couponRepository.save(coupon);
     }
     /**
      * 쿠폰 저장
@@ -36,20 +41,19 @@ public class CouponService {
     /**
      * 쿠폰조회(락x)
      */
-    public Coupon getCouponById(Long couponId) {
-
+//
+//    public Coupon getCouponById(Long couponId) {
+//        return couponRepository.findCouponByCouponId(couponId)
+//                .orElseThrow(() -> new CouponNotFoundException(ErrorCode.COUPON_FOUND_ERROR, "Coupon not found with ID: " + couponId));
+//    }
+    public Optional<Coupon> getCouponById(Long couponId) {
         return couponRepository.findCouponByCouponId(couponId);
     }
     /**
      * 쿠펀할인
      */
     public double calculateDiscount(Coupon coupon, double totalAmount) {
-        if (coupon == null) {
-            throw new IllegalArgumentException("Coupon cannot be null");
-        }
-        if (totalAmount <= 0) {
-            throw new IllegalArgumentException("Total amount must be greater than 0");
-        }
-        return totalAmount * (coupon.getDiscountPercent());
+        return coupon.calculateDiscount(totalAmount, coupon.getDiscountPercent()); // 도메인 객체 메서드 호출
     }
+
 }
