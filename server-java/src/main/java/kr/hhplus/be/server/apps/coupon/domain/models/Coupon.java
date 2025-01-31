@@ -24,4 +24,32 @@ public class Coupon {
     private Integer maxCount;
     private Integer currentCount;
 
+    // 쿠폰 발급 가능 여부 확인 및 발급 수 증가
+    public void incrementUsage() {
+        if (currentCount >= maxCount) {
+            throw new IllegalArgumentException("Coupon usage limit reached");
+        }
+        this.currentCount += 1;
+    }
+
+    // 할인 계산
+    public double calculateDiscount(double totalAmount, double discountPercent) {
+        if (totalAmount <= 0) {
+            throw new IllegalArgumentException("Total amount must be greater than 0");
+        }
+        return totalAmount * discountPercent;
+    }
+
+    public static Coupon create(String code, Double discountPercent, LocalDate validDate, Integer maxCount, Integer currentCount) {
+        if (code == null || discountPercent == null || validDate == null || maxCount == null || currentCount == null) {
+            throw new IllegalArgumentException("Coupon fields cannot be null.");
+        }
+        return Coupon.builder()
+                .code(code)
+                .discountPercent(discountPercent)
+                .validDate(validDate)
+                .maxCount(maxCount)
+                .currentCount(currentCount)
+                .build();
+    }
 }

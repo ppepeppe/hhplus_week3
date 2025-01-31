@@ -21,4 +21,15 @@ public class Product {
     private Integer quantity;
     private Integer sales;
 
+    public void reduceQuantity(int quantity) {
+        if (this.quantity < quantity) {
+            throw new IllegalArgumentException("재고 부족");
+        }
+        this.quantity -= quantity;
+    }
+
+    public void increaseSales(int quantity) {
+        this.sales += quantity;
+    }
+
 }

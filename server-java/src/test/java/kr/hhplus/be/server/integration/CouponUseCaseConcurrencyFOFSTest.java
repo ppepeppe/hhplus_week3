@@ -78,7 +78,8 @@ public class CouponUseCaseConcurrencyFOFSTest {
 
         executorService.shutdown();
         executorService.awaitTermination(5, TimeUnit.SECONDS);
-        Coupon coupon = couponRepository.findCouponByCouponId(1L);
+        Optional<Coupon> coupon1 = couponRepository.findCouponByCouponId(1L);
+        Coupon coupon = coupon1.get();
         System.out.println(queue);
         // 큐에서 요청을 순차적으로 처리하면서 orderFacade.placeOrder 호출
         for (int i = 0; i < 40; i++) {
@@ -96,7 +97,7 @@ public class CouponUseCaseConcurrencyFOFSTest {
             }
         }
     // then
-        Coupon updatedCoupon = couponRepository.findCouponByCouponId(coupon.getCouponId());
+        Coupon updatedCoupon = couponRepository.findCouponByCouponId(coupon.getCouponId()).get();
         assertEquals(30, updatedCoupon.getCurrentCount()); // 성공적으로 발급된 쿠폰 수
         assertEquals(30, successfulRegistrations.get()); // 성공한 신청
         assertEquals(10, failedRegistrations.get()); // 실패한 신청
