@@ -39,11 +39,16 @@ public class UserPointService {
 //
 //        return userPointRepository.save(userPoint);
 //    }
+    /**
+     *  유저id로 유저 조회
+     */
     public Integer getUserPointByUserId(long userId) {
         UserPoint userPoint = userPointRepository.findUserPointByUserId(userId);
         return userPoint.getPoint();
     }
-
+    /**
+     * 유저 포인트 충전
+     */
     public UserPoint chargeUserPoint(long userId, Integer points) {
         UserPoint userPoint = userPointRepository.findUserPointByUserId(userId);
         userPoint.addPoints(points);

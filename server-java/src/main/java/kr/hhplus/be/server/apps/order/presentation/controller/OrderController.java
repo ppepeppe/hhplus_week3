@@ -15,6 +15,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/orders")
 public class OrderController {
     public final OrderFacade orderFacade;
+    /**
+     * 상품 주문
+     */
     @PostMapping("/payment")
     public ResponseEntity<Order> order(@RequestBody OrderRequestDTO orderRequestDTO) {
         Order order = orderFacade.placeOrder(orderRequestDTO.userId, orderRequestDTO.couponId, orderRequestDTO.orderItems);

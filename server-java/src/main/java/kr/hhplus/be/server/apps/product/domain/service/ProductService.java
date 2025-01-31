@@ -56,7 +56,9 @@ public class ProductService {
 //    public List<Product> getProductListTopN(List<Long> productIds) {
 //        return productRepository.findAllById(productIds);
 //    }
-
+    /**
+     * 상품 조회
+     */
     public Product getProductByProductId(long productId) {
         return productRepository.findProductByProductId(productId)
                 .orElseThrow(() -> new ProductNotFoundException(ErrorCode.PRODUCT_NOT_FOUND,
@@ -76,7 +78,9 @@ public class ProductService {
         product.increaseSales(quantity); // increaseSales 사용
         return productRepository.save(product);
     }
-
+    /**
+     * 전체 상품 리스트 조회
+     */
     public Page<Product> getProductList(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("productId").ascending());
         return productRepository.findAll(pageable);

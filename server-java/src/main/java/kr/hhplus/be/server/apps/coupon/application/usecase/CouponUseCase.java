@@ -24,6 +24,9 @@ public class CouponUseCase {
         couponService.incrementCouponUsage(coupon);
         return userCouponService.issueCoupon(userId, couponId);
     }
+    /**
+     * 쿠폰 할인 적용
+     */
     public double applyCouponDiscount(Long userId, Long couponId, double totalAmount) {
         Coupon coupon = couponService.getCouponById(couponId).orElse(null);
         if (coupon == null) {
