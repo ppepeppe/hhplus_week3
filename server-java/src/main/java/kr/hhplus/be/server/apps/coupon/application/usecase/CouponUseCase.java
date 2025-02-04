@@ -1,11 +1,14 @@
 package kr.hhplus.be.server.apps.coupon.application.usecase;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
 import kr.hhplus.be.server.apps.coupon.domain.models.Coupon;
 import kr.hhplus.be.server.apps.coupon.domain.models.UserCoupon;
 import kr.hhplus.be.server.apps.coupon.domain.service.CouponService;
 import kr.hhplus.be.server.apps.coupon.domain.service.UserCouponService;
+import kr.hhplus.be.server.common.util.RedisLockUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -18,17 +21,18 @@ public class CouponUseCase {
     private final CouponService couponService;
     private final UserCouponService userCouponService;
 
-    @Transactional
-    public UserCoupon issueCoupon(Long userId, Long couponId) {
-        Coupon coupon = couponService.getCouponWithLock(couponId);
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public UserCoupon couponIssuanceTransactional(Long userId, Long couponId) {
+        Coupon coupon = couponService.getCouponById(couponId);
         couponService.incrementCouponUsage(coupon);
         return userCouponService.issueCoupon(userId, couponId);
     }
     /**
      * 쿠폰 할인 적용
      */
+
     public double applyCouponDiscount(Long userId, Long couponId, double totalAmount) {
-        Coupon coupon = couponService.getCouponById(couponId).orElse(null);
+        Coupon coupon = couponService.getCouponById(couponId);
         if (coupon == null) {
             return totalAmount;
         }

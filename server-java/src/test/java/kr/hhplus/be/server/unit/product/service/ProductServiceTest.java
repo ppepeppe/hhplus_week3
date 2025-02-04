@@ -61,7 +61,7 @@ public class ProductServiceTest {
     void shouldReduceStockAndIncreaseSalesSuccessfully() {
         // Given
         Product product = new Product(PRODUCT_ID, "패딩", 100000, 10, 0);
-        when(productRepository.findByIdWithLock(PRODUCT_ID)).thenReturn(product);
+        when(productRepository.findByIdWithLock(PRODUCT_ID)).thenReturn(Optional.of(product));
         when(productRepository.save(any(Product.class))).thenReturn(new Product(PRODUCT_ID, "패딩", 100000, 9, 1));
 
         // When

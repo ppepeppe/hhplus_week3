@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-public class OrderFacadeConcurrencyFOFSIntegrationTest {
+public class    OrderFacadeConcurrencyFOFSIntegrationTest {
     @Autowired
     private JdbcTemplate jdbcTemplate;
     @Autowired
@@ -151,6 +151,8 @@ public class OrderFacadeConcurrencyFOFSIntegrationTest {
     @Test
     @DisplayName("BlockingQueue를 이용한 선착순 주문 처리 테스트")
     public void testBlockingQueueInTest() throws InterruptedException {
+        int[] successCount = {0}; // 주문 성공 수 (배열로 선언하여 내부에서 변경 가능)
+        int[] failCount = {0}; // 주문 실패 수
         // 테스트용 BlockingQueue (Redis 대신 사용)
         BlockingQueue<Long> queue = new LinkedBlockingQueue<>();
 
@@ -170,7 +172,7 @@ public class OrderFacadeConcurrencyFOFSIntegrationTest {
         executorService.awaitTermination(5, TimeUnit.SECONDS);
         System.out.println(queue);
         // 큐에서 요청을 순차적으로 처리하면서 orderFacade.placeOrder 호출
-        for (int i = 0; i < 13; i++) {
+        for (int i = 1; i < 13; i++) {
             Long userId = queue.poll(); // 큐에서 선착순으로 꺼냄
             if (userId != null) {
                 try {
@@ -180,8 +182,10 @@ public class OrderFacadeConcurrencyFOFSIntegrationTest {
                             .quantity(1)
                             .build();
                     orderFacade.placeOrder(userId, 0L, List.of(orderItemDTO)); // 주문 처리
+                    successCount[0]++;
                     System.out.println("User " + userId + " 주문 성공");
                 } catch (Exception e) {
+                    failCount[0]++;
                     System.out.println("User " + userId + " 주문 실패: " + e.getMessage());
                 }
             }
@@ -190,6 +194,8 @@ public class OrderFacadeConcurrencyFOFSIntegrationTest {
         // 최종 검증: 남은 재고 확인 등
         Optional<Product> product = productRepository.findProductByProductId(1L);
         assertEquals(0, product.get().getQuantity()); // 남은 재고가 0이어야 함
+        assertEquals(10, successCount[0]);
+        assertEquals(2, failCount[0]);
     }
 
 

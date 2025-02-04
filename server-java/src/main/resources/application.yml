@@ -29,3 +29,14 @@ spring:
     url: jdbc:mysql://localhost:3306/hanghae?characterEncoding=UTF-8&serverTimezone=UTC
     username: root
     password: 1234
+  data:
+    redis:
+      host: localhost   # Redis 서버 주소 (Docker 사용 시 'redis-container')
+      port: 6379        # Redis 포트 (기본: 6379)
+      password:         # 필요하면 비밀번호 설정
+      timeout: 3000ms   # 연결 타임아웃 (3초)
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 5
+          min-idle: 2

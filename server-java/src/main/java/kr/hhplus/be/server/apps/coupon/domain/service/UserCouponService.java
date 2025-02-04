@@ -19,7 +19,6 @@ public class UserCouponService {
      */
     public UserCoupon issueCoupon(Long userId, Long couponId) {
         validateIds(userId, couponId); // 유효성 검사 분리
-
         UserCoupon userCoupon = UserCoupon.create(userId, couponId); // 객체 생성 로직 분리
 
         return saveUserCoupon(userCoupon); // 저장 로직 분리
@@ -39,16 +38,7 @@ public class UserCouponService {
         return Optional.ofNullable(userCouponRepository.findUserCouponByUserIdAndCouponId(userId, couponId)
                 .orElseThrow(() -> new UserCouponNotFoundException("UserCoupon not found for User ID: " + userId + ", Coupon ID: " + couponId)));
     }
-    /**
-     * 유저쿠폰 사용여부
-     */
-    public void markCouponAsUsed(UserCoupon userCoupon) {
-        if (userCoupon.getIsUsed()) {
-            throw new InvalidCouponException("The coupon has already been used.");
-        }
-        userCoupon.setIsUsed(true);
-        userCouponRepository.save(userCoupon);
-    }
+    
     /**
      * 사용자가 갖고있는 쿠폰 조회
      */

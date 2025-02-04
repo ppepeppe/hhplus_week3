@@ -14,6 +14,7 @@ public interface ProductRepository {
     Product save(Product product);
     Page<Product> findAll(Pageable pageable);
     List<Product> findAllById(Iterable<Long> ids);
-    Product findByIdWithLock(Long productId);
+    Optional<Product> findByIdWithLock(Long productId);
+    Optional<Product> findById(Long id);
     void saveAll(List<Product> products);
 }

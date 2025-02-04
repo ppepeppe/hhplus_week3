@@ -1,10 +1,12 @@
 package kr.hhplus.be.server.integration;
 
+import kr.hhplus.be.server.apps.coupon.application.facade.CouponFacade;
 import kr.hhplus.be.server.apps.coupon.application.usecase.CouponUseCase;
 import kr.hhplus.be.server.apps.coupon.domain.models.Coupon;
 import kr.hhplus.be.server.apps.coupon.domain.models.UserCoupon;
 import kr.hhplus.be.server.apps.coupon.domain.repository.CouponRepository;
 import kr.hhplus.be.server.apps.coupon.domain.repository.UserCouponRepository;
+import kr.hhplus.be.server.apps.coupon.domain.service.CouponService;
 import kr.hhplus.be.server.apps.user.domain.models.entity.User;
 import kr.hhplus.be.server.apps.user.domain.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -35,7 +37,11 @@ public class CouponUseCaseTest {
     @Autowired
     private UserRepository  userRepository;
     @Autowired
+    private CouponService couponService;
+    @Autowired
     private CouponUseCase couponUseCase;
+    @Autowired
+    private CouponFacade couponFacade;
 
     @Autowired
     private CouponRepository couponRepository;
@@ -67,12 +73,12 @@ public class CouponUseCaseTest {
 
         AtomicInteger successfulRegistrations = new AtomicInteger(0);
         AtomicInteger failedRegistrations = new AtomicInteger(0);
-        Coupon coupon = couponRepository.findCouponByCouponId(1L).get();
+        Coupon coupon = couponService.getCouponById(1L);
         for (int i = 2; i <= numberOfThreads + 1; i++) {
             final long userId = i;
             executorService.submit(() -> {
                 try {
-                    couponUseCase.issueCoupon(userId, coupon.getCouponId());
+                    couponFacade.issueCoupon(userId, coupon.getCouponId());
                     successfulRegistrations.incrementAndGet();
                     System.out.println("User " + userId + " 쿠폰 발급 완료.");
                 } catch (Exception e) {
@@ -89,6 +95,7 @@ public class CouponUseCaseTest {
 
         // then
         Coupon updatedCoupon = couponRepository.findCouponByCouponId(coupon.getCouponId()).get();
+        System.out.println(successfulRegistrations.get());
         assertEquals(30, updatedCoupon.getCurrentCount()); // 성공적으로 발급된 쿠폰 수
         assertEquals(30, successfulRegistrations.get()); // 성공한 신청
         assertEquals(10, failedRegistrations.get()); // 실패한 신청

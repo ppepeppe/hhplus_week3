@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.integration;
 
+import kr.hhplus.be.server.apps.coupon.application.facade.CouponFacade;
 import kr.hhplus.be.server.apps.coupon.application.usecase.CouponUseCase;
 import kr.hhplus.be.server.apps.coupon.domain.models.Coupon;
 import kr.hhplus.be.server.apps.coupon.domain.models.UserCoupon;
@@ -37,7 +38,7 @@ public class CouponUseCaseConcurrencyFOFSTest {
     @Autowired
     private UserRepository  userRepository;
     @Autowired
-    private CouponUseCase couponUseCase;
+    private CouponFacade couponFacade;
 
     @Autowired
     private CouponRepository couponRepository;
@@ -87,7 +88,7 @@ public class CouponUseCaseConcurrencyFOFSTest {
             if (userId != null) {
                 try {
 
-                    couponUseCase.issueCoupon(userId, coupon.getCouponId());
+                    couponFacade.issueCoupon(userId, coupon.getCouponId());
                     successfulRegistrations.incrementAndGet();
                     System.out.println("User " + userId + " 쿠폰 발급 완료");
                 } catch (Exception e) {

@@ -45,8 +45,9 @@ dependencies {
 	implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
 	// webflux
 	implementation("org.springframework.boot:spring-boot-starter-webflux")
-
-
+	// redisson
+	implementation("org.springframework.boot:spring-boot-starter-data-redis")
+	implementation("org.redisson:redisson-spring-boot-starter:3.17.6")
 	// Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.boot:spring-boot-testcontainers")

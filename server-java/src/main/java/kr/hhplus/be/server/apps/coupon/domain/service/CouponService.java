@@ -41,19 +41,9 @@ public class CouponService {
     /**
      * 쿠폰조회(락x)
      */
-//
-//    public Coupon getCouponById(Long couponId) {
-//        return couponRepository.findCouponByCouponId(couponId)
-//                .orElseThrow(() -> new CouponNotFoundException(ErrorCode.COUPON_FOUND_ERROR, "Coupon not found with ID: " + couponId));
-//    }
-    public Optional<Coupon> getCouponById(Long couponId) {
-        return couponRepository.findCouponByCouponId(couponId);
-    }
-    /**
-     * 쿠펀할인
-     */
-    public double calculateDiscount(Coupon coupon, double totalAmount) {
-        return coupon.calculateDiscount(totalAmount, coupon.getDiscountPercent()); // 도메인 객체 메서드 호출
+    public Coupon getCouponById(Long couponId) {
+
+        return couponRepository.findCouponByCouponId(couponId).orElse(null);
     }
 
 }
