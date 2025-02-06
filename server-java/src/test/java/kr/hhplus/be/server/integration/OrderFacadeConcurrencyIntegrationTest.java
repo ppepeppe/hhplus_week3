@@ -120,11 +120,11 @@ public class OrderFacadeConcurrencyIntegrationTest {
     }
 
     @Test
-    @DisplayName("동시에 11명의 사용자가 상품 개수 10개인 상품을 동시에 주문(비관적락)")
+    @DisplayName("동시에 12명의 사용자가 상품 개수 10개인 상품을 동시에 주문(비관적락)")
     public void testConcurrentOrders() throws InterruptedException {
         int numberOfUsers = 12; // 10명의 사용자
         ExecutorService executorService = Executors.newFixedThreadPool(numberOfUsers);
-        for (int i = 1; i < numberOfUsers; i++) {
+        for (int i = 1; i <= numberOfUsers; i++) {
             final long userId = i;
             executorService.submit(() -> {
                 try {

@@ -1,6 +1,5 @@
 package kr.hhplus.be.server.apps.order.application.facade;
 
-import jakarta.transaction.Transactional;
 import kr.hhplus.be.server.apps.coupon.application.usecase.CouponUseCase;
 import kr.hhplus.be.server.apps.order.application.usecase.OrderUseCase;
 import kr.hhplus.be.server.apps.order.application.usecase.PaymentUseCase;
@@ -10,6 +9,8 @@ import kr.hhplus.be.server.apps.order.domain.models.entity.OrderItem;
 import kr.hhplus.be.server.mock.OrderDataSender;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +25,6 @@ public class OrderFacade {
 
     @Transactional
     public Order placeOrder(Long userId, Long couponId, List<OrderItemDTO> orderItems) {
-        System.out.println(orderItems);
         // 주문 생성
         Order order = Order.createOrder(userId, orderItems);
 

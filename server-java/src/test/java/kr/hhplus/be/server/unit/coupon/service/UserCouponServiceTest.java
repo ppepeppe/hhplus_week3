@@ -11,10 +11,12 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -63,4 +65,67 @@ public class UserCouponServiceTest {
                 .isInstanceOf(UserCouponNotFoundException.class)
                 .hasMessageContaining("UserCoupon not found for User ID: 1, Coupon ID: 999");
     }
+
+    @Test
+    @DisplayName("유저 ID로 쿠폰 목록 조회 - 정상 케이스")
+    void shouldReturnUserCouponsWhenUserHasCoupons() {
+        // when
+        Long userId = 1L;
+        UserCoupon userCoupon1 = UserCoupon.builder()
+                .userCouponId(1L)
+                .userId(1L)
+                .couponId(1L)
+                .isUsed(false)
+                .build();
+
+        UserCoupon userCoupon2 = UserCoupon.builder()
+                .userCouponId(2L)
+                .userId(1L)
+                .couponId(2L)
+                .isUsed(false)
+                .build();
+        when(userCouponRepository.findAllByUserId(userId)).thenReturn(List.of(userCoupon1, userCoupon2));
+        // then
+        List<UserCoupon> userCoupons = userCouponService.getUserCouponListByUserId(userId);
+
+        // given
+        assertNotNull(userCoupons);
+        assertThat(2).isEqualTo( userCoupons.size()); // 유저가 2개의 쿠폰을 가지고 있어야 함
+    }
+
+    @Test
+    @DisplayName("validateIds - userId가 null일 경우 예외 발생")
+    void shouldThrowExceptionWhenUserIdIsNull() {
+        Long userId = null;
+        Long couponId = 100L;
+
+        assertThatThrownBy(() ->  userCouponService.validateIds(userId, couponId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("User ID and Coupon ID cannot be null.");
+
+    }
+
+    @Test
+    @DisplayName("validateIds - couponId가 null일 경우 예외 발생")
+    void shouldThrowExceptionWhenCouponIdIsNull() {
+        Long userId = 1L;
+        Long couponId = null;
+
+        assertThatThrownBy(() ->  userCouponService.validateIds(userId, couponId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("User ID and Coupon ID cannot be null.");
+    }
+
+    @Test
+    @DisplayName("validateIds - userId와 couponId가 모두 null일 경우 예외 발생")
+    void shouldThrowExceptionWhenBothIdsAreNull() {
+        Long userId = null;
+        Long couponId = null;
+
+        assertThatThrownBy(() ->  userCouponService.validateIds(userId, couponId))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("User ID and Coupon ID cannot be null.");
+
+    }
+
 }
