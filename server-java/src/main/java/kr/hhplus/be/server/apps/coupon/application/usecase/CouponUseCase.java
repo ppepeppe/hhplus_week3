@@ -1,32 +1,22 @@
 package kr.hhplus.be.server.apps.coupon.application.usecase;
 
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.annotation.Propagation;
 import kr.hhplus.be.server.apps.coupon.domain.models.Coupon;
 import kr.hhplus.be.server.apps.coupon.domain.models.UserCoupon;
 import kr.hhplus.be.server.apps.coupon.domain.service.CouponService;
 import kr.hhplus.be.server.apps.coupon.domain.service.UserCouponService;
-import kr.hhplus.be.server.common.util.RedisLockUtil;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
 public class CouponUseCase {
     private final CouponService couponService;
     private final UserCouponService userCouponService;
-//
-//    @Transactional(propagation = Propagation.REQUIRES_NEW)
-//    public UserCoupon couponIssuanceTransactional(Long userId, Long couponId) {
-//        Coupon coupon = couponService.getCouponById(couponId);
-//        couponService.incrementCouponUsage(coupon);
-//        return userCouponService.issueCoupon(userId, couponId);
-//    }
+
     @Transactional
     public void issueCoupon(Long userId, Long couponId) {
         // 1. Redis에서 발급된 쿠폰을 DB에서도 반영
