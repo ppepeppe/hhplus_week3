@@ -17,15 +17,15 @@ public class UserCouponService {
     /**
      * 쿠폰발급
      */
-    public UserCoupon issueCoupon(Long userId, Long couponId) {
+    public void issueCoupon(Long userId, Long couponId) {
         validateIds(userId, couponId); // 유효성 검사 분리
         UserCoupon userCoupon = UserCoupon.create(userId, couponId); // 객체 생성 로직 분리
 
-        return saveUserCoupon(userCoupon); // 저장 로직 분리
+        saveUserCoupon(userCoupon); // 저장 로직 분리
     }
-    private UserCoupon saveUserCoupon(UserCoupon userCoupon) {
+    private void saveUserCoupon(UserCoupon userCoupon) {
         try {
-            return userCouponRepository.save(userCoupon);
+            userCouponRepository.save(userCoupon);
         } catch (Exception e) {
             throw new InvalidCouponException("Failed to issue coupon to user. Please try again.");
         }

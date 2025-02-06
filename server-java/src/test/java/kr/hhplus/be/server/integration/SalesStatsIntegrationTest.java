@@ -60,21 +60,20 @@ public class SalesStatsIntegrationTest {
     @DisplayName("판매량 top 5 성공 테스트")
     public void testGetProducts() {
         // given
-        LocalDate nowDate = LocalDate.now();
         int topN = 5;
+        int days = 3;
 
         // when
-        List<Product> products = salesStatsUseCase.getProductsTopN(nowDate, topN);
-        System.out.println(products);
+        List<Product> products = salesStatsUseCase.getProductsTopN(days, topN);
+
         // then
         assertNotNull(products);
-        assertThat(products.size()).isEqualTo(topN);
-        assertThat(products.get(0).getName()).isEqualTo("Product A");
-        assertThat(products.get(1).getName()).isEqualTo("Product B");
-        assertThat(products.get(2).getName()).isEqualTo("Product C");
-        assertThat(products.get(3).getName()).isEqualTo("Product D");
-        assertThat(products.get(4).getName()).isEqualTo("Product E");
+        assertThat(products).hasSize(topN);
+
+        // ✅ 정렬된 순서대로 특정 이름이 있는지 체크
+        assertThat(products).extracting("name").containsExactly("Product A", "Product B", "Product C", "Product D", "Product E");
     }
+
     @AfterEach
     void tearDown() {
         // 테스트 후 데이터 삭제

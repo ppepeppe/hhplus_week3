@@ -105,5 +105,56 @@ public class ProductServiceTest {
         assertThat(result.getContent().get(0)).isEqualTo(product1);
         assertThat(result.getContent().get(1)).isEqualTo(product2);
     }
+    @Test
+    @DisplayName("주문 수량이 null이면 예외 발생")
+    void shouldThrowExceptionWhenQuantityIsNull() {
+        // given
+        Long productId = 1L;
+
+        // when & then
+        assertThatThrownBy(() -> productService.orderProduct(productId, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Order quantity must be greater than 0");
+    }
+
+    @Test
+    @DisplayName("주문 수량이 0이면 예외 발생")
+    void shouldThrowExceptionWhenQuantityIsZero() {
+        // given
+        Long productId = 1L;
+
+        // when & then
+        assertThatThrownBy(() -> productService.orderProduct(productId, 0))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Order quantity must be greater than 0");
+    }
+
+    @Test
+    @DisplayName("주문 수량이 음수이면 예외 발생")
+    void shouldThrowExceptionWhenQuantityIsNegative() {
+        // given
+        Long productId = 1L;
+
+        // when & then
+        assertThatThrownBy(() -> productService.orderProduct(productId, -1))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Order quantity must be greater than 0");
+    }
+
+    @Test
+    @DisplayName("재고 부족으로 주문 실패 예외 발생")
+    void shouldThrowExceptionWhenStockIsNotEnough() {
+        // given
+        Long productId = 1L;
+        Integer quantity = 10;
+        Product product = new Product(productId, "패딩", 100000, 5, 0); // 재고가 5개밖에 없음
+
+        when(productRepository.findByIdWithLock(productId)).thenReturn(Optional.of(product));
+
+        // when & then
+        assertThatThrownBy(() -> productService.orderProduct(productId, quantity))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("재고 부족으로 주문 실패");
+    }
 
 }

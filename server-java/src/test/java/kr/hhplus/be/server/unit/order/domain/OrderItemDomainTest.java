@@ -61,4 +61,19 @@ public class OrderItemDomainTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Payment amount must be greater than 0");
     }
+
+    @Test
+    @DisplayName("OrderItem 생성 시 유효하지 않은 Quantity 로 예외 발생")
+    void shouldThrowExceptionWhenQuantityInvalid() {
+        Order order = Order.builder().orderId(1L).build();
+        OrderItemDTO orderItemDTO = OrderItemDTO.builder()
+                .productId(1L)
+                .paymentAmount(10)
+                .quantity(0)
+                .build();
+
+        assertThatThrownBy(() -> OrderItem.fromDTO(order, orderItemDTO))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Quantity must be greater than 0");
+    }
 }

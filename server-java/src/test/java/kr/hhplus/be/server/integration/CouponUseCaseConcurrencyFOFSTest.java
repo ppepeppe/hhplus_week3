@@ -6,6 +6,7 @@ import kr.hhplus.be.server.apps.coupon.domain.models.Coupon;
 import kr.hhplus.be.server.apps.coupon.domain.models.UserCoupon;
 import kr.hhplus.be.server.apps.coupon.domain.repository.CouponRepository;
 import kr.hhplus.be.server.apps.coupon.domain.repository.UserCouponRepository;
+import kr.hhplus.be.server.apps.coupon.domain.service.CouponService;
 import kr.hhplus.be.server.apps.order.domain.models.dto.OrderItemDTO;
 import kr.hhplus.be.server.apps.product.domain.models.Product;
 import kr.hhplus.be.server.apps.user.domain.models.entity.User;
@@ -39,6 +40,8 @@ public class CouponUseCaseConcurrencyFOFSTest {
     private UserRepository  userRepository;
     @Autowired
     private CouponFacade couponFacade;
+    @Autowired
+    private CouponService couponService;
 
     @Autowired
     private CouponRepository couponRepository;
@@ -59,6 +62,9 @@ public class CouponUseCaseConcurrencyFOFSTest {
         // UserCoupon 초기화
         UserCoupon userCoupon = new UserCoupon(null, user.getUserId(), coupon.getCouponId(), false);
         userCouponRepository.save(userCoupon);
+
+        couponService.createCoupon(coupon.getCouponId(), 30, 0.25, 1);
+
     }
     @Test
     @DisplayName("BlockingQueue를 이용한 선착순 쿠폰 처리 테스트")

@@ -32,11 +32,11 @@ public class CouponController {
                 registerCouponRequestDto.getCurrentCount());
         return ResponseEntity.ok(coupon);
     }
-    @PostMapping("/issue")
-    public ResponseEntity<UserCoupon> issueCoupon(@RequestBody IssueCouponRequestDto issueCouponRequestDto) {
-        UserCoupon userCoupon = couponFacade.issueCoupon(issueCouponRequestDto.getUserId(), issueCouponRequestDto.getCouponId());
-        return ResponseEntity.ok(userCoupon);
-    }
+//    @PostMapping("/issue")
+//    public ResponseEntity<UserCoupon> issueCoupon(@RequestBody IssueCouponRequestDto issueCouponRequestDto) {
+//        UserCoupon userCoupon = couponFacade.issueCoupon(issueCouponRequestDto.getUserId(), issueCouponRequestDto.getCouponId());
+//        return ResponseEntity.ok(userCoupon);
+//    }
     @GetMapping("/{userId}/couponlist")
     public ResponseEntity<List<UserCoupon>> getUserCouponListByUserId(@PathVariable Long userId) {
         List<UserCoupon> userCoupons = couponUseCase.getUserCouponListByUserId(userId);

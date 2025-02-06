@@ -5,6 +5,7 @@ import kr.hhplus.be.server.apps.order.domain.models.dto.OrderItemDTO;
 import kr.hhplus.be.server.apps.order.domain.models.entity.Order;
 import kr.hhplus.be.server.apps.order.domain.models.entity.OrderItem;
 import kr.hhplus.be.server.apps.product.domain.service.ProductService;
+import kr.hhplus.be.server.apps.stats.domain.service.SalesStatsService;
 import kr.hhplus.be.server.apps.user.domain.service.UserPointService;
 import kr.hhplus.be.server.common.util.RedisLockUtil;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ import java.util.List;
 public class PaymentUseCase {
     private final UserPointService userPointService;
     private final ProductService productService;
+    private final SalesStatsService salesStatsService;
     private final RedisLockUtil redisLockUtil;
 
 //    public void handlePayment(Order order, List<OrderItem> orderItems) {
@@ -43,6 +45,9 @@ public class PaymentUseCase {
                 throw new RuntimeException("상품 주문 요청이 많아 처리되지 않았습니다. 다시 시도해주세요.");
             }
             try {
+                // 판매량 업데이트 (sales_stats 테이블 반영)
+                salesStatsService.updateSalesStats(orderItem.getProductId(), orderItem.getQuantity());
+
                 productService.orderProduct(orderItem.getProductId(), orderItem.getQuantity());
             } finally {
                 redisLockUtil.releaseLock(lockKey, order.getUserId());

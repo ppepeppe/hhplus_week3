@@ -6,16 +6,46 @@ import kr.hhplus.be.server.apps.coupon.domain.repository.UserCouponRepository;
 import kr.hhplus.be.server.common.exception.CouponNotFoundException;
 import kr.hhplus.be.server.common.exception.vo.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @RequiredArgsConstructor
 public class CouponService {
     private final CouponRepository couponRepository;
     private final UserCouponRepository userCouponRepository;
+    private final RedisTemplate<String, Object> redisTemplate;
 
+    public Integer getCouponStock(Long couponId) {
+        String couponStockKey = "coupon:stock:" + couponId;
+        return(Integer) redisTemplate.opsForValue().get(couponStockKey);
+    }
+    /**
+     * 쿠폰을 Redis에 저장 (쿠폰 등록)
+     */
+    public void createCoupon(Long couponId, int stock, double discount, int expiryHours) {
+        String couponStockKey = "coupon:stock:" + couponId;
+        String couponInfoKey = "coupon:info:" + couponId;
+
+        // 1. 쿠폰 개수 저장 (TTL 적용)
+        redisTemplate.opsForValue().set(couponStockKey, stock);
+        redisTemplate.expire(couponStockKey, expiryHours, TimeUnit.HOURS);
+
+        // 2. 쿠폰 정보 저장 (HashMap 형태)
+        Map<String, Object> couponInfo = new HashMap<>();
+        couponInfo.put("couponId", couponId);
+        couponInfo.put("discount", discount);
+        couponInfo.put("stock", stock);
+        couponInfo.put("expiryHours", expiryHours);
+
+        redisTemplate.opsForHash().putAll(couponInfoKey, couponInfo);
+        redisTemplate.expire(couponInfoKey, expiryHours, TimeUnit.HOURS);
+    }
     /**
      * 쿠폰조회 (비관적락)
      */

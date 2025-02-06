@@ -2,6 +2,7 @@ plugins {
 	java
 	id("org.springframework.boot") version "3.4.1"
 	id("io.spring.dependency-management") version "1.1.7"
+	id("jacoco")
 }
 
 fun getGitHash(): String {
@@ -59,4 +60,30 @@ dependencies {
 tasks.withType<Test> {
 	useJUnitPlatform()
 	systemProperty("user.timezone", "UTC")
+	finalizedBy(tasks.jacocoTestReport)
+}
+
+jacoco {
+	toolVersion = "0.8.8" // ✅ 최신 JaCoCo 버전 설정
+}
+
+tasks.jacocoTestReport {
+	dependsOn(tasks.test) // ✅ 테스트 실행 후 커버리지 리포트 생성
+	reports {
+		xml.required.set(true)
+		csv.required.set(false)
+		html.outputLocation.set(layout.buildDirectory.dir("jacocoHtml")) // ✅ HTML 리포트 경로 설정
+	}
+}
+tasks.jacocoTestCoverageVerification {
+	violationRules {
+		rule {
+			limit {
+				minimum = BigDecimal("0.80") // ✅ BigDecimal 값을 직접 할당
+			}
+		}
+	}
+}
+tasks.named("check") {
+	dependsOn(tasks.jacocoTestCoverageVerification) // ✅ 커버리지 검증 포함
 }

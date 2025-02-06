@@ -20,12 +20,21 @@ import java.util.Optional;
 public class CouponUseCase {
     private final CouponService couponService;
     private final UserCouponService userCouponService;
-
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public UserCoupon couponIssuanceTransactional(Long userId, Long couponId) {
+//
+//    @Transactional(propagation = Propagation.REQUIRES_NEW)
+//    public UserCoupon couponIssuanceTransactional(Long userId, Long couponId) {
+//        Coupon coupon = couponService.getCouponById(couponId);
+//        couponService.incrementCouponUsage(coupon);
+//        return userCouponService.issueCoupon(userId, couponId);
+//    }
+    @Transactional
+    public void issueCoupon(Long userId, Long couponId) {
+        // 1. Redis에서 발급된 쿠폰을 DB에서도 반영
         Coupon coupon = couponService.getCouponById(couponId);
         couponService.incrementCouponUsage(coupon);
-        return userCouponService.issueCoupon(userId, couponId);
+
+        // 2. 사용자 쿠폰 정보 DB 저장
+        userCouponService.issueCoupon(userId, couponId);
     }
     /**
      * 쿠폰 할인 적용
