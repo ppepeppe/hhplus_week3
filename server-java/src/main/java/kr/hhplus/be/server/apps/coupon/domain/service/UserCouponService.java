@@ -17,22 +17,20 @@ public class UserCouponService {
     /**
      * 쿠폰발급
      */
-    public UserCoupon issueCoupon(Long userId, Long couponId) {
-        if (userId == null || couponId == null) {
-            throw new IllegalArgumentException("User ID and Coupon ID cannot be null.");
-        }
-        UserCoupon userCoupon = UserCoupon.builder()
-                .couponId(couponId)
-                .userId(userId)
-                .isUsed(false)
-                .build();
+    public void issueCoupon(Long userId, Long couponId) {
+        validateIds(userId, couponId); // 유효성 검사 분리
+        UserCoupon userCoupon = UserCoupon.create(userId, couponId); // 객체 생성 로직 분리
 
+        saveUserCoupon(userCoupon); // 저장 로직 분리
+    }
+    private void saveUserCoupon(UserCoupon userCoupon) {
         try {
-            return userCouponRepository.save(userCoupon);
+            userCouponRepository.save(userCoupon);
         } catch (Exception e) {
             throw new InvalidCouponException("Failed to issue coupon to user. Please try again.");
         }
     }
+
     /**
      * 유저쿠폰 조회
      */
@@ -40,22 +38,27 @@ public class UserCouponService {
         return Optional.ofNullable(userCouponRepository.findUserCouponByUserIdAndCouponId(userId, couponId)
                 .orElseThrow(() -> new UserCouponNotFoundException("UserCoupon not found for User ID: " + userId + ", Coupon ID: " + couponId)));
     }
-    /**
-     * 유저쿠폰 사용여부
-     */
-    public void markCouponAsUsed(UserCoupon userCoupon) {
-        if (userCoupon.getIsUsed()) {
-            throw new InvalidCouponException("The coupon has already been used.");
-        }
-        userCoupon.setIsUsed(true);
-        userCouponRepository.save(userCoupon);
-    }
+    
     /**
      * 사용자가 갖고있는 쿠폰 조회
      */
     public List<UserCoupon> getUserCouponListByUserId(Long userId) {
 
         return userCouponRepository.findAllByUserId(userId);
+    }
+    /**
+     * 유저쿠폰 사용여부
+     */
+    public void useUserCoupon(Long userId, Long couponId) {
+        UserCoupon userCoupon = userCouponRepository.findUserCouponByUserIdAndCouponId(userId, couponId)
+                .orElseThrow(() -> new UserCouponNotFoundException("UserCoupon not found for User ID: " + userId + ", Coupon ID: " + couponId));
+        userCoupon.markAsUsed(); // 도메인 객체 메서드 호출
+        userCouponRepository.save(userCoupon);
+    }
+    public void validateIds(Long userId, Long couponId) {
+        if (userId == null || couponId == null) {
+            throw new IllegalArgumentException("User ID and Coupon ID cannot be null.");
+        }
     }
 
 }

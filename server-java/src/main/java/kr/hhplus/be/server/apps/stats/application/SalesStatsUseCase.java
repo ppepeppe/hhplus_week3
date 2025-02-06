@@ -15,9 +15,9 @@ public class SalesStatsUseCase {
     private final SalesStatsService salesStatsService;
     private final ProductService productService;
     // 인기 상품 조회
-    public List<Product> getProductsTopN(LocalDate nowDate, int topN) {
+    public List<Product> getProductsTopN(int days, int topN) {
         // 날짜 기준 인기 상품 조회
-        List<Long> productIdList = salesStatsService.getTopSellingProductIds(nowDate, topN);
+        List<Long> productIdList = salesStatsService.getTopSellingProductIds(days, topN);
         // 인기 상품 IdList로 상품 조회
         return productService.getProductListTopN(productIdList);
     }

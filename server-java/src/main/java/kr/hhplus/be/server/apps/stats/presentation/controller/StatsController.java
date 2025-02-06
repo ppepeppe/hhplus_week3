@@ -2,6 +2,7 @@ package kr.hhplus.be.server.apps.stats.presentation.controller;
 
 import kr.hhplus.be.server.apps.product.domain.models.Product;
 import kr.hhplus.be.server.apps.stats.application.SalesStatsUseCase;
+import kr.hhplus.be.server.apps.stats.presentation.dto.GetProductsByTopListRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,8 +17,8 @@ import java.util.List;
 public class StatsController {
     private final SalesStatsUseCase salesStatsUseCase;
     @GetMapping("/products/top")
-    public List<Product> getProductsByTopList() {
+    public List<Product> getProductsByTopList(GetProductsByTopListRequest getProductsByTopListRequest) {
 
-        return salesStatsUseCase.getProductsTopN(LocalDate.now(), 5);
+        return salesStatsUseCase.getProductsTopN(getProductsByTopListRequest.days, getProductsByTopListRequest.topN);
     }
 }

@@ -8,11 +8,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface CouponJpaRepository extends JpaRepository<Coupon, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT c FROM Coupon c WHERE c.couponId = :couponId")
-    Coupon findCouponByCouponIdWithLock(@Param("couponId") Long couponId);
+    Optional<Coupon> findCouponByCouponIdWithLock(@Param("couponId") Long couponId);
 
-    Coupon findCouponByCouponId(Long couponId);
+    Optional<Coupon> findCouponByCouponId(Long couponId);
 }

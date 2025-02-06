@@ -22,4 +22,17 @@ public class UserCoupon {
     private Long couponId;
 
     private Boolean isUsed;
+    public static UserCoupon create(Long userId, Long couponId) {
+        return UserCoupon.builder()
+                .userId(userId)
+                .couponId(couponId)
+                .isUsed(false)
+                .build();
+    }
+    public void markAsUsed() {
+        if (this.isUsed) {
+            throw new IllegalArgumentException("The coupon has already been used.");
+        }
+        this.isUsed = true;
+    }
 }
