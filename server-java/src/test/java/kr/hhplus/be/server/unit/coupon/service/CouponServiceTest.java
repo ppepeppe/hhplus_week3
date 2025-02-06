@@ -14,6 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDate;
 import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -46,5 +47,27 @@ public class CouponServiceTest {
         assertThatThrownBy(() -> couponService.saveCoupon(null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Coupon cannot be null");
+    }
+    @Test
+    @DisplayName("saveCoupon - 정상적인 쿠폰 저장")
+    void shouldSaveCouponWhenValidInput() {
+        // given
+        Coupon coupon = Coupon.builder()
+                .code("TESTCODE")
+                .discountPercent(0.25)
+                .validDate(LocalDate.of(2025, 1, 11))
+                .maxCount(30)
+                .currentCount(0)
+                .build();
+
+        when(couponRepository.save(any(Coupon.class))).thenReturn(coupon);
+
+        // when
+        Coupon savedCoupon = couponService.saveCoupon(coupon);
+
+        // then
+        assertThat(savedCoupon.getDiscountPercent()).isEqualTo(0.25);
+        assertThat(savedCoupon.getMaxCount()).isEqualTo(30);
+
     }
 }

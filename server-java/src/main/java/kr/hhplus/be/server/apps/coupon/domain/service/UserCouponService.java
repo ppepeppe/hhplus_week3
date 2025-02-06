@@ -55,7 +55,7 @@ public class UserCouponService {
         userCoupon.markAsUsed(); // 도메인 객체 메서드 호출
         userCouponRepository.save(userCoupon);
     }
-    private void validateIds(Long userId, Long couponId) {
+    public void validateIds(Long userId, Long couponId) {
         if (userId == null || couponId == null) {
             throw new IllegalArgumentException("User ID and Coupon ID cannot be null.");
         }
