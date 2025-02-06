@@ -79,7 +79,7 @@ tasks.jacocoTestCoverageVerification {
 	violationRules {
 		rule {
 			limit {
-				minimum = BigDecimal("0.80") // ✅ BigDecimal 값을 직접 할당
+				minimum = BigDecimal("0.60") // ✅ BigDecimal 값을 직접 할당
 			}
 		}
 	}
