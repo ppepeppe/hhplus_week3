@@ -31,14 +31,14 @@ public class RedisLockUtil {
         try {
             boolean success = lock.tryLock(waitTime, leaseTime, TimeUnit.SECONDS);
             if (success) {
-                System.out.println("✅ 락 획득 성공: " + key + " userId = " + userId);
+                System.out.println("락 획득 성공: " + key + " userId = " + userId);
             } else {
-                System.out.println("❌ 락 획득 실패: " + key + " userId = " + userId);
+                System.out.println("락 획득 실패: " + key + " userId = " + userId);
             }
             return success;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            System.out.println("⛔ 락 획득 중 인터럽트 발생: " + key + " userId = " + userId);
+            System.out.println("락 획득 중 인터럽트 발생: " + key + " userId = " + userId);
             return false;
         }
     }
@@ -53,9 +53,9 @@ public class RedisLockUtil {
 
         if (lock.isHeldByCurrentThread()) { // 현재 스레드가 락을 가지고 있는지 확인
             lock.unlock();
-            System.out.println("🔓 락 해제 완료: " + key + " userId = " + userId);
+            System.out.println("락 해제 완료: " + key + " userId = " + userId);
         } else {
-            System.out.println("⚠️ 락 해제 실패 (다른 스레드가 보유 중): " + key);
+            System.out.println("락 해제 실패 (다른 스레드가 보유 중): " + key);
         }
     }
 }
