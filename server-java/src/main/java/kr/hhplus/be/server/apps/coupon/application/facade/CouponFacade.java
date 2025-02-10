@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.apps.coupon.application.facade;
 
 import kr.hhplus.be.server.apps.coupon.application.usecase.CouponUseCase;
+import kr.hhplus.be.server.apps.coupon.domain.models.UserCoupon;
 import kr.hhplus.be.server.common.util.RedisLockUtil;
 import lombok.RequiredArgsConstructor;
 import org.redisson.api.RLock;
@@ -18,7 +19,7 @@ public class CouponFacade {
     private final RedisTemplate<String, Object> redisTemplate;
 
 
-    public void issueCoupon(Long userId, Long couponId) throws InterruptedException {
+    public UserCoupon issueCoupon(Long userId, Long couponId) throws InterruptedException {
         String couponStockKey = "coupon:stock:" + couponId;
         String issuedUsersKey = "coupon:issued:users:" + couponId;
         RLock lock = redissonClient.getLock("lock:coupon:" + couponId);
@@ -45,10 +46,11 @@ public class CouponFacade {
                 throw new RuntimeException("쿠폰이 모두 소진되었습니다.");
             }
             // 쿠폰 발급 정보를 UseCase에 전달하여 DB에도 반영
-            couponUseCase.issueCoupon(userId, couponId);
+            UserCoupon userCoupon = couponUseCase.issueCoupon(userId, couponId);
             // 선착순 쿠폰 발급 처리
             redisTemplate.opsForSet().add(issuedUsersKey, userId);
 
+            return userCoupon;
         } finally {
             lock.unlock();
         }

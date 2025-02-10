@@ -17,7 +17,7 @@ public class SalesStatsUseCase {
     // 인기 상품 조회
     public List<Product> getProductsTopN(int days, int topN) {
         // 날짜 기준 인기 상품 조회
-        List<Long> productIdList = salesStatsService.getTopSellingProductIds(days, topN);
+        List<Long> productIdList = salesStatsService.getPopularProductIds(days, topN);
         // 인기 상품 IdList로 상품 조회
         return productService.getProductListTopN(productIdList);
     }

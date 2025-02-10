@@ -22,6 +22,7 @@ public class CouponController {
     private final CouponUseCase couponUseCase;
     private final CouponFacade couponFacade;
     private static final LocalDate DATE_TIME = LocalDate.of(2024, 12, 31);
+
     @PostMapping("/reg")
     public ResponseEntity<Coupon> registerCoupon(@RequestBody RegisterCouponRequestDto registerCouponRequestDto) {
         Coupon coupon = couponUseCase.registerCoupon(
@@ -32,15 +33,20 @@ public class CouponController {
                 registerCouponRequestDto.getCurrentCount());
         return ResponseEntity.ok(coupon);
     }
-//    @PostMapping("/issue")
-//    public ResponseEntity<UserCoupon> issueCoupon(@RequestBody IssueCouponRequestDto issueCouponRequestDto) {
-//        UserCoupon userCoupon = couponFacade.issueCoupon(issueCouponRequestDto.getUserId(), issueCouponRequestDto.getCouponId());
-//        return ResponseEntity.ok(userCoupon);
-//    }
+
     @GetMapping("/{userId}/couponlist")
     public ResponseEntity<List<UserCoupon>> getUserCouponListByUserId(@PathVariable Long userId) {
         List<UserCoupon> userCoupons = couponUseCase.getUserCouponListByUserId(userId);
         return ResponseEntity.ok(userCoupons);
     }
+
+    @GetMapping("users/{userId}/coupon/{couponId}")
+    public ResponseEntity<UserCoupon> issueCoupon(@PathVariable Long userId, @PathVariable Long couponId) throws InterruptedException {
+        UserCoupon userCoupon = couponFacade.issueCoupon(userId, couponId);
+        return ResponseEntity.ok(userCoupon);
+    }
+
+
+
 
 }

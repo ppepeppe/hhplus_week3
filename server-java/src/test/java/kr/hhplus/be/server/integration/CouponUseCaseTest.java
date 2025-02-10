@@ -80,7 +80,8 @@ public class CouponUseCaseTest {
             final long userId = i;
             executorService.submit(() -> {
                 try {
-                    couponFacade.issueCoupon(userId, coupon.getCouponId());
+                    UserCoupon userCoupon = couponFacade.issueCoupon(userId, coupon.getCouponId());
+                    System.out.println(userCoupon);
                     successfulRegistrations.incrementAndGet();
                     System.out.println("User " + userId + " 쿠폰 발급 완료.");
                 } catch (Exception e) {
@@ -94,7 +95,7 @@ public class CouponUseCaseTest {
 
         latch.await();
         executorService.shutdown();
-        // ✅ Redis에서 최종 쿠폰 개수 확인
+        // Redis에서 최종 쿠폰 개수 확인
         Integer remainingStock = couponService.getCouponStock(1L);
         // then
         System.out.println(successfulRegistrations.get());

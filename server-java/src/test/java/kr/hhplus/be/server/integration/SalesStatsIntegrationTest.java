@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -34,6 +35,8 @@ public class SalesStatsIntegrationTest {
     private ProductRepository productRepository;
     @Autowired
     private SalesStatsRepository salesStatsRepository;
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
     @BeforeEach
     void setUp() {
         // Product 초기화
@@ -55,20 +58,30 @@ public class SalesStatsIntegrationTest {
         SalesStats stats8 = new SalesStats(null, 5L, 4, LocalDate.now().minusDays(1));
         salesStatsRepository.saveAll(List.of(stats1, stats2, stats3, stats4, stats5, stats6, stats7, stats8));
 
+        // 🔹 Redis 데이터 초기화
+        redisTemplate.getConnectionFactory().getConnection().flushAll();
+
+        // 🔹 Redis에 인기 상품 데이터 삽입
+        addMockDataToRedis("popular:" + LocalDate.now().toString(), "1", 15);
+        addMockDataToRedis("popular:" + LocalDate.now().minusDays(1), "2", 12);
+        addMockDataToRedis("popular:" + LocalDate.now().minusDays(1), "3", 20);
+        addMockDataToRedis("popular:" + LocalDate.now().minusDays(2), "4", 8);
+        addMockDataToRedis("popular:" + LocalDate.now().minusDays(3), "5", 6);
+
     }
     @Test
     @DisplayName("판매량 top 5 성공 테스트")
     public void testGetProducts() {
         // given
         int topN = 5;
-        int days = 3;
+        int days = 5;
 
         // when
         List<Product> products = salesStatsUseCase.getProductsTopN(days, topN);
 
         // then
         assertNotNull(products);
-        assertThat(products).hasSize(topN);
+        assertThat(products).hasSize(5);
 
         // ✅ 정렬된 순서대로 특정 이름이 있는지 체크
         assertThat(products).extracting("name").containsExactly("Product A", "Product B", "Product C", "Product D", "Product E");
@@ -79,5 +92,15 @@ public class SalesStatsIntegrationTest {
         // 테스트 후 데이터 삭제
         jdbcTemplate.execute("TRUNCATE TABLE product");
         jdbcTemplate.execute("TRUNCATE TABLE sales_stats");
+        redisTemplate.getConnectionFactory().getConnection().flushAll();
+
+    }
+
+
+    /**
+     * 🔹 Redis에 테스트용 데이터 추가
+     */
+    private void addMockDataToRedis(String key, String productId, double score) {
+        redisTemplate.opsForZSet().add(key, productId, score);
     }
 }

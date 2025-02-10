@@ -1,56 +1,99 @@
 package kr.hhplus.be.server.apps.stats.domain.service;
 
+import kr.hhplus.be.server.apps.product.domain.models.Product;
+import kr.hhplus.be.server.apps.product.domain.service.ProductService;
 import kr.hhplus.be.server.apps.stats.domain.repository.SalesStatsRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class SalesStatsService {
     private final SalesStatsRepository salesStatsRepository;
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
 
-    private static final String REDIS_KEY_PREFIX = "salesStats:";
+
+
+    private static final String POPULAR_KEY_PREFIX = "popular:";
+    private static final String UNION_KEY_PREFIX = "popular:union:";
+
     /**
-     * 최근 N일 동안 가장 많이 팔린 상품 조회 (Redis + DB 혼합 전략)
+     * 지난 N일 동안의 인기 상품 ID 조회
      */
-    public List<Long> getTopSellingProductIds(int days, int topN) {
-        LocalDate today = LocalDate.now();
-        String redisKey = REDIS_KEY_PREFIX + today.minusDays(days).toString();
+    public List<Long> getPopularProductIds(int days, int topN) {
+        List<String> keys = generatePopularKeys(days);
+        String unionKey = createUnionKey(keys, days);
 
-        // ✅ Redis에서 조회 (없으면 DB 조회)
-        List<Long> cachedData = (List<Long>) redisTemplate.opsForValue().get(redisKey);
-        if (cachedData != null) {
-            return cachedData;
+        List<Long> popularProductIds = getProductsFromRedisKey(unionKey, topN);
+
+        // 생성된 임시 키 삭제
+        if (keys.size() > 1) {
+            redisTemplate.delete(unionKey);
         }
 
-        // ✅ Redis에 데이터가 없으면 DB에서 조회 후 Redis에 저장
-        LocalDate startDate = today.minusDays(days);
-        List<Long> topSellingProducts = salesStatsRepository.findTopSellingProductIds(startDate, today, topN);
-
-        // ✅ Redis에 저장 (TTL: 1시간)
-        redisTemplate.opsForValue().set(redisKey, topSellingProducts, 6, TimeUnit.HOURS);
-
-        return topSellingProducts;
+        return popularProductIds;
     }
 
     /**
-     * 주문 발생 시 판매량을 업데이트 (실시간 반영)
+     * Redis에서 특정 날짜의 인기 상품 ID 조회
      */
-    @Transactional
-    public void updateSalesStats(Long productId, int quantity) {
-        LocalDate today = LocalDate.now();
-// ✅ 캐시에 먼저 저장 (Write-Through)
-        String redisKey = "salesStats:" + today.toString();
-        redisTemplate.opsForHash().increment(redisKey, productId.toString(), quantity);
-        salesStatsRepository.updateSalesStats(productId, today, quantity);
+    private List<Long> getProductsFromRedisKey(String key, int topN) {
+        Set<String> productIds = redisTemplate.opsForZSet().reverseRange(key, 0, topN - 1);
+
+        if (productIds == null || productIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<Long> productIdList = new ArrayList<>();
+        for (String idStr : productIds) {
+            try {
+                if (Long.parseLong(idStr) > 0) {
+                    productIdList.add(Long.parseLong(idStr));
+                }
+            } catch (NumberFormatException e) {
+                // ✅ 형식 변환 오류 발생 시 예외 처리
+                log.warn("Invalid product ID format: {}", idStr, e);
+            }
+        }
+
+        return productIdList;
+    }
+
+    /**
+     * 최근 N일 동안의 Redis 키 리스트 생성
+     */
+    private List<String> generatePopularKeys(int days) {
+        List<String> keys = new ArrayList<>();
+        for (int i = 0; i < days; i++) {
+            keys.add(POPULAR_KEY_PREFIX + LocalDate.now().minusDays(i));
+        }
+        return keys;
+    }
+
+
+    /**
+     * 여러 날짜의 인기 상품 데이터를 합산하는 Redis 키 생성
+     */
+    private String createUnionKey(List<String> keys, int days) {
+        if (keys.size() == 1) {
+            return keys.get(0);
+        }
+        String unionKey = UNION_KEY_PREFIX + days;
+        redisTemplate.opsForZSet().unionAndStore(keys.get(0), keys.subList(1, keys.size()), unionKey);
+        return unionKey;
     }
 
 }

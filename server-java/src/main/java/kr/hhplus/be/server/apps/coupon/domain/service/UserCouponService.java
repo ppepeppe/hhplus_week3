@@ -2,6 +2,7 @@ package kr.hhplus.be.server.apps.coupon.domain.service;
 
 import kr.hhplus.be.server.apps.coupon.domain.models.UserCoupon;
 import kr.hhplus.be.server.apps.coupon.domain.repository.UserCouponRepository;
+import kr.hhplus.be.server.apps.user.domain.models.entity.User;
 import kr.hhplus.be.server.common.exception.InvalidCouponException;
 import kr.hhplus.be.server.common.exception.UserCouponNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -17,15 +18,15 @@ public class UserCouponService {
     /**
      * 쿠폰발급
      */
-    public void issueCoupon(Long userId, Long couponId) {
+    public UserCoupon issueCoupon(Long userId, Long couponId) {
         validateIds(userId, couponId); // 유효성 검사 분리
         UserCoupon userCoupon = UserCoupon.create(userId, couponId); // 객체 생성 로직 분리
 
-        saveUserCoupon(userCoupon); // 저장 로직 분리
+        return saveUserCoupon(userCoupon); // 저장 로직 분리
     }
-    private void saveUserCoupon(UserCoupon userCoupon) {
+    private UserCoupon saveUserCoupon(UserCoupon userCoupon) {
         try {
-            userCouponRepository.save(userCoupon);
+            return userCouponRepository.save(userCoupon);
         } catch (Exception e) {
             throw new InvalidCouponException("Failed to issue coupon to user. Please try again.");
         }

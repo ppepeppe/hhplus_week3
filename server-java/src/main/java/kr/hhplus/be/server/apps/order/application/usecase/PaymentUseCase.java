@@ -46,7 +46,7 @@ public class PaymentUseCase {
             }
             try {
                 // 판매량 업데이트 (sales_stats 테이블 반영)
-                salesStatsService.updateSalesStats(orderItem.getProductId(), orderItem.getQuantity());
+//                salesStatsService.updateSalesStats(orderItem.getProductId(), orderItem.getQuantity());
 
                 productService.orderProduct(orderItem.getProductId(), orderItem.getQuantity());
             } finally {

@@ -7,6 +7,7 @@ import kr.hhplus.be.server.apps.coupon.domain.service.CouponService;
 import kr.hhplus.be.server.apps.coupon.domain.service.UserCouponService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.resource.ResourceTransformer;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -16,15 +17,16 @@ import java.util.List;
 public class CouponUseCase {
     private final CouponService couponService;
     private final UserCouponService userCouponService;
+    private final ResourceTransformer resourceTransformer;
 
     @Transactional
-    public void issueCoupon(Long userId, Long couponId) {
+    public UserCoupon issueCoupon(Long userId, Long couponId) {
         // 1. Redis에서 발급된 쿠폰을 DB에서도 반영
         Coupon coupon = couponService.getCouponById(couponId);
         couponService.incrementCouponUsage(coupon);
 
         // 2. 사용자 쿠폰 정보 DB 저장
-        userCouponService.issueCoupon(userId, couponId);
+        return userCouponService.issueCoupon(userId, couponId);
     }
     /**
      * 쿠폰 할인 적용
