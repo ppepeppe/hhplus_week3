@@ -134,11 +134,8 @@ public class OrderFacadeConcurrencyIntegrationTest {
                             .paymentAmount(1000)
                             .quantity(1)
                             .build();
-                    System.out.println("호출전" + userId);
                     orderFacade.placeOrder(userId, 0L, List.of(orderItemDTO));
-                    System.out.println("User " + userId + " 주문 성공.");
                 } catch (Exception e) {
-                    System.out.println("User " + userId + " 주문 실패: " + e.getMessage());
 
                 }
             });

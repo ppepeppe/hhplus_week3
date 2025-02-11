@@ -62,8 +62,7 @@ public class CouponUseCaseTest {
         // UserCoupon 초기화
         UserCoupon userCoupon = new UserCoupon(null, user.getUserId(), coupon.getCouponId(), false);
         userCouponRepository.save(userCoupon);
-
-        couponService.createCoupon(coupon.getCouponId(), 30, 0.25, 1);
+        couponService.registerCoupon(coupon.getCouponId(), 30);
     }
     @Test
     @DisplayName("동시에 40명이 쿠폰을 신청 시 30명만 성공 (비관적 락)")
@@ -80,13 +79,10 @@ public class CouponUseCaseTest {
             final long userId = i;
             executorService.submit(() -> {
                 try {
-                    UserCoupon userCoupon = couponFacade.issueCoupon(userId, coupon.getCouponId());
-                    System.out.println(userCoupon);
+                    UserCoupon userCoupon = couponFacade.issueCoupon(userId, coupon.getCode(), coupon.getCouponId());
                     successfulRegistrations.incrementAndGet();
-                    System.out.println("User " + userId + " 쿠폰 발급 완료.");
                 } catch (Exception e) {
                     failedRegistrations.incrementAndGet();
-                    System.out.println("User " + userId + " 쿠폰 발급 실패: " + e.getMessage());
                 } finally {
                     latch.countDown();
                 }
@@ -95,10 +91,9 @@ public class CouponUseCaseTest {
 
         latch.await();
         executorService.shutdown();
-        // Redis에서 최종 쿠폰 개수 확인
+        // Redis에서 최종 쿠폰 개수 확인x
         Integer remainingStock = couponService.getCouponStock(1L);
-        // then
-        System.out.println(successfulRegistrations.get());
+
         assertEquals(0, remainingStock); // 30개 발급 완료 후 남은 재고는 0
         assertEquals(30, successfulRegistrations.get()); // 30명 성공
         assertEquals(10, failedRegistrations.get()); // 10명 실패

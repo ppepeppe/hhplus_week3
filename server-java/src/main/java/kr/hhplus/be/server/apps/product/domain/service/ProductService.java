@@ -92,7 +92,6 @@ public class ProductService {
         Product product = productRepository.findByIdWithLock(productId)
                 .orElseThrow(() -> new ProductNotFoundException(ErrorCode.NOT_FOUND_ERROR,
                         "Product not found with ID: " + productId));
-        System.out.println(product);
         if (product.getQuantity() < quantity) {
             throw new IllegalArgumentException("재고 부족으로 주문 실패: 상품 ID " + productId);
         }

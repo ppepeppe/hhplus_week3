@@ -1,5 +1,11 @@
 package kr.hhplus.be.server.apps.coupon.application.usecase;
 
+import kr.hhplus.be.server.apps.user.domain.models.entity.User;
+import kr.hhplus.be.server.apps.user.domain.service.UserService;
+import kr.hhplus.be.server.common.util.LockService;
+import kr.hhplus.be.server.common.util.RedissonLockService;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import kr.hhplus.be.server.apps.coupon.domain.models.Coupon;
 import kr.hhplus.be.server.apps.coupon.domain.models.UserCoupon;
@@ -11,23 +17,27 @@ import org.springframework.web.servlet.resource.ResourceTransformer;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
 public class CouponUseCase {
     private final CouponService couponService;
     private final UserCouponService userCouponService;
-    private final ResourceTransformer resourceTransformer;
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    private static final String COUPON_STOCK_KEY = "coupon:stock:";
+
+    private final LockService lockService;
 
     @Transactional
-    public UserCoupon issueCoupon(Long userId, Long couponId) {
-        // 1. Redis에서 발급된 쿠폰을 DB에서도 반영
+    public UserCoupon execute(Long userId, String couponCode, Long couponId) {
         Coupon coupon = couponService.getCouponById(couponId);
         couponService.incrementCouponUsage(coupon);
-
-        // 2. 사용자 쿠폰 정보 DB 저장
+        redisTemplate.opsForValue().decrement(COUPON_STOCK_KEY + couponId);
         return userCouponService.issueCoupon(userId, couponId);
     }
+
     /**
      * 쿠폰 할인 적용
      */

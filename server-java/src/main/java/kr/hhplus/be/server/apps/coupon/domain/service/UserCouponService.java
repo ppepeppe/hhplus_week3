@@ -7,6 +7,8 @@ import kr.hhplus.be.server.common.exception.InvalidCouponException;
 import kr.hhplus.be.server.common.exception.UserCouponNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,7 +21,7 @@ public class UserCouponService {
      * 쿠폰발급
      */
     public UserCoupon issueCoupon(Long userId, Long couponId) {
-        validateIds(userId, couponId); // 유효성 검사 분리
+//        validateIds(userId, couponId); // 유효성 검사 분리
         UserCoupon userCoupon = UserCoupon.create(userId, couponId); // 객체 생성 로직 분리
 
         return saveUserCoupon(userCoupon); // 저장 로직 분리

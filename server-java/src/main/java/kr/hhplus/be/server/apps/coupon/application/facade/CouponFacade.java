@@ -8,6 +8,7 @@ import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.concurrent.TimeUnit;
 
@@ -16,43 +17,28 @@ import java.util.concurrent.TimeUnit;
 public class CouponFacade {
     private final CouponUseCase couponUseCase;
     private final RedissonClient redissonClient;
+    private static final String COUPON_LOCK_PREFIX = "coupon:lock:";
+    private static final String COUPON_STOCK_KEY = "coupon:stock:";
     private final RedisTemplate<String, Object> redisTemplate;
 
-
-    public UserCoupon issueCoupon(Long userId, Long couponId) throws InterruptedException {
-        String couponStockKey = "coupon:stock:" + couponId;
-        String issuedUsersKey = "coupon:issued:users:" + couponId;
-        RLock lock = redissonClient.getLock("lock:coupon:" + couponId);
+    public UserCoupon issueCoupon(Long userId, String couponCode, Long couponId) {
+        RLock lock = redissonClient.getLock(COUPON_LOCK_PREFIX + couponId);
 
         try {
-            if (!lock.tryLock(3, 10, TimeUnit.SECONDS)) {
-                throw new RuntimeException("현재 쿠폰 발급 요청이 많습니다. 다시 시도해주세요.");
+            // waitTime과 leaseTime을 적절히 설정
+            boolean isLocked = lock.tryLock(5, 3, TimeUnit.SECONDS);
+            if (!isLocked) {
+                throw new RuntimeException("Failed to acquire lock");
             }
 
-            // 쿠폰 정보 확인 (쿠폰이 Redis에 있는지 체크)
-            if (!redisTemplate.hasKey(couponStockKey)) {
-                throw new RuntimeException("유효하지 않은 쿠폰입니다.");
-            }
-
-            // 이미 쿠폰을 받은 사용자인지 확인
-            if (redisTemplate.opsForSet().isMember(issuedUsersKey, userId)) {
-                throw new RuntimeException("이미 쿠폰을 발급받았습니다.");
-            }
-
-            // 쿠폰 개수 차감
-            Long currentStock = redisTemplate.opsForValue().increment(couponStockKey, -1);
-            if (currentStock < 0) {
-                redisTemplate.opsForValue().increment(couponStockKey, 1);
-                throw new RuntimeException("쿠폰이 모두 소진되었습니다.");
-            }
-            // 쿠폰 발급 정보를 UseCase에 전달하여 DB에도 반영
-            UserCoupon userCoupon = couponUseCase.issueCoupon(userId, couponId);
-            // 선착순 쿠폰 발급 처리
-            redisTemplate.opsForSet().add(issuedUsersKey, userId);
-
-            return userCoupon;
+            return couponUseCase.execute(userId, couponCode, couponId);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Lock interrupted", e);
         } finally {
-            lock.unlock();
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
         }
     }
 }

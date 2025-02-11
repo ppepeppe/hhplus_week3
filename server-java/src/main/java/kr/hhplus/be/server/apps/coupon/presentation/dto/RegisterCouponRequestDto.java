@@ -8,6 +8,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 public class RegisterCouponRequestDto {
+    private Long couponId;
     private String code;
     private Double discountPercent;
     private LocalDate validDate;
