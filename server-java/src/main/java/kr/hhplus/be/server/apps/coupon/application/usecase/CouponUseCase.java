@@ -38,20 +38,6 @@ public class CouponUseCase {
         return userCouponService.issueCoupon(userId, couponId);
     }
 
-    /**
-     * 쿠폰 할인 적용
-     */
-
-    public double applyCouponDiscount(Long userId, Long couponId, double totalAmount) {
-        Coupon coupon = couponService.getCouponById(couponId);
-        if (coupon == null) {
-            return totalAmount;
-        }
-        double discount = coupon.calculateDiscount(totalAmount, coupon.getDiscountPercent()); // 도메인 객체 메서드 호출
-        userCouponService.useUserCoupon(userId, couponId); // 상태 변경
-        return totalAmount - discount;
-    }
-
     public List<UserCoupon> getUserCouponListByUserId(Long userId) {
         return userCouponService.getUserCouponListByUserId(userId);
     }

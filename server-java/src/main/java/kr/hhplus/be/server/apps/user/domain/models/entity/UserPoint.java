@@ -38,7 +38,7 @@ public class UserPoint {
         if (this.point < points) {
             throw new IllegalArgumentException(String.format("포인트 부족: 사용 가능한 포인트는 %d, 차감하려는 포인트는 %d입니다.", this.point, points));
         }
-        this.point -= points;
+        this.point -= (int) points;
     }
 
 

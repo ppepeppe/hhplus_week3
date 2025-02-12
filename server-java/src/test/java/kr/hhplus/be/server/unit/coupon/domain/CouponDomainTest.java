@@ -24,10 +24,10 @@ public class CouponDomainTest {
                 .currentCount(0)
                 .build();
 
-        double totalAmount = 10000;
+        Integer totalAmount = 10000;
 
         // when
-        double discount = coupon.calculateDiscount(totalAmount, coupon.getDiscountPercent());
+        double discount = coupon.calculateDiscount(totalAmount);
 
         // then
         assertThat(discount).isEqualTo(2500); // 10,000 * 0.25 = 2,500
@@ -47,7 +47,7 @@ public class CouponDomainTest {
                 .build();
 
         // when & then
-        assertThatThrownBy(() -> coupon.calculateDiscount(-1, coupon.getDiscountPercent()))
+        assertThatThrownBy(() -> coupon.calculateDiscount(-1))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Total amount must be greater than 0");
     }

@@ -20,7 +20,7 @@ public class OrderController {
      */
     @PostMapping("/payment")
     public ResponseEntity<Order> order(@RequestBody OrderRequestDTO orderRequestDTO) {
-        Order order = orderFacade.placeOrder(orderRequestDTO.userId, orderRequestDTO.couponId, orderRequestDTO.orderItems);
+        Order order = orderFacade.placeOrder(orderRequestDTO.userId,orderRequestDTO.orderItems , orderRequestDTO.couponId);
         return ResponseEntity.ok(order);
     }
 }

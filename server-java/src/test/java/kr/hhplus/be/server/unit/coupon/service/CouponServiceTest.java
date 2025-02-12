@@ -29,15 +29,18 @@ public class CouponServiceTest {
     private CouponService couponService;
 
     @Test
-    @DisplayName("쿠폰 ID로 쿠폰을 조회할 때 존재하지 않으면 예외 발생")
-    void shouldThrowExceptionWhenCouponNotFound() {
+    @DisplayName("쿠폰 ID로 쿠폰을 조회할 때 존재하지 않으면 null 반환")
+    void shouldReturnNullWhenCouponNotFound() {
         // given
-        when(couponRepository.findCouponByCouponIdWithLock(1L)).thenReturn(Optional.empty());
+        Long couponId = 1L;
+        when(couponRepository.findCouponByCouponIdWithLock(couponId))
+                .thenReturn(Optional.empty());
 
-        // when & then
-        assertThatThrownBy(() -> couponService.getCouponWithLock(1L))
-                .isInstanceOf(CouponNotFoundException.class)
-                .hasMessageContaining("Coupon not found with ID: 1");
+        // when
+        Coupon result = couponService.getCouponWithLock(couponId);
+
+        // then
+        assertThat(result).isNull();
     }
 
     @Test

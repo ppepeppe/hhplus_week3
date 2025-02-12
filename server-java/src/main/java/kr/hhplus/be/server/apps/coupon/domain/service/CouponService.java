@@ -3,6 +3,7 @@ package kr.hhplus.be.server.apps.coupon.domain.service;
 import kr.hhplus.be.server.apps.coupon.domain.models.Coupon;
 import kr.hhplus.be.server.apps.coupon.domain.repository.CouponRepository;
 import kr.hhplus.be.server.apps.coupon.domain.repository.UserCouponRepository;
+import kr.hhplus.be.server.apps.order.domain.models.dto.FinalAmountResult;
 import kr.hhplus.be.server.common.exception.CouponNotFoundException;
 import kr.hhplus.be.server.common.exception.vo.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -28,33 +29,13 @@ public class CouponService {
         return(Integer) redisTemplate.opsForValue().get(couponStockKey);
     }
     /**
-     * 쿠폰을 Redis에 저장 (쿠폰 등록)
-     */
-    public void createCoupon(Long couponId, int stock, double discount, int expiryHours) {
-        String couponStockKey = "coupon:stock:" + couponId;
-        String couponInfoKey = "coupon:info:" + couponId;
-
-        // 1. 쿠폰 개수 저장 (TTL 적용)
-        redisTemplate.opsForValue().set(couponStockKey, stock);
-        redisTemplate.expire(couponStockKey, expiryHours, TimeUnit.HOURS);
-
-        // 2. 쿠폰 정보 저장 (HashMap 형태)
-        Map<String, Object> couponInfo = new HashMap<>();
-        couponInfo.put("couponId", couponId);
-        couponInfo.put("discount", discount);
-        couponInfo.put("stock", stock);
-        couponInfo.put("expiryHours", expiryHours);
-
-        redisTemplate.opsForHash().putAll(couponInfoKey, couponInfo);
-        redisTemplate.expire(couponInfoKey, expiryHours, TimeUnit.HOURS);
-    }
-    /**
      * 쿠폰조회 (비관적락)
      */
+    @Transactional
     public Coupon getCouponWithLock(Long couponId) {
 
-        return couponRepository.findCouponByCouponIdWithLock(couponId)
-                .orElseThrow(() -> new CouponNotFoundException(ErrorCode.COUPON_FOUND_ERROR, "Coupon not found with ID: " + couponId));
+        return couponRepository.findCouponByCouponIdWithLock(couponId).orElse(null);
+
     }
     public void incrementCouponUsage(Coupon coupon) {
         coupon.incrementUsage(); // 도메인 객체 메서드 호출
@@ -87,4 +68,22 @@ public class CouponService {
         // Redis에 문자열 형태로 초기 재고를 저장 (예: "30")
         redisTemplate.opsForValue().set(key, stock);
     }
+
+    public FinalAmountResult useCoupon(Long couponId, Integer totalAmount) {
+        FinalAmountResult finalAmountResult = new FinalAmountResult();
+        Coupon coupon = couponRepository.findCouponByCouponId(couponId).orElse(null);
+        Integer discount = 0;
+
+        if (coupon == null) {
+            discount = 0;
+        } else {
+            discount = coupon.calculateDiscount(totalAmount);
+        }
+        totalAmount -= discount;
+        finalAmountResult.setCoupon(coupon);
+        finalAmountResult.setFinalAmount(totalAmount);
+
+        return finalAmountResult;
+    }
+
 }

@@ -33,6 +33,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -123,6 +124,8 @@ public class OrderFacadeConcurrencyIntegrationTest {
     @DisplayName("동시에 12명의 사용자가 상품 개수 10개인 상품을 동시에 주문(비관적락)")
     public void testConcurrentOrders() throws InterruptedException {
         int numberOfUsers = 12; // 10명의 사용자
+        AtomicInteger successfulRegistrations = new AtomicInteger(0);
+        AtomicInteger failedRegistrations = new AtomicInteger(0);
         ExecutorService executorService = Executors.newFixedThreadPool(numberOfUsers);
         for (int i = 1; i <= numberOfUsers; i++) {
             final long userId = i;
@@ -134,9 +137,11 @@ public class OrderFacadeConcurrencyIntegrationTest {
                             .paymentAmount(1000)
                             .quantity(1)
                             .build();
-                    orderFacade.placeOrder(userId, 0L, List.of(orderItemDTO));
+                    orderFacade.placeOrder(userId, List.of(orderItemDTO), 0L);
+                    successfulRegistrations.incrementAndGet();
                 } catch (Exception e) {
-
+                    System.out.println(e.getMessage());
+                    failedRegistrations.incrementAndGet();
                 }
             });
         }

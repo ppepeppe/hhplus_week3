@@ -1,5 +1,6 @@
 package kr.hhplus.be.server.apps.stats.domain.service;
 
+import kr.hhplus.be.server.apps.order.domain.models.entity.OrderItem;
 import kr.hhplus.be.server.apps.product.domain.models.Product;
 import kr.hhplus.be.server.apps.product.domain.service.ProductService;
 import kr.hhplus.be.server.apps.stats.domain.repository.SalesStatsRepository;
@@ -22,7 +23,6 @@ import java.util.stream.IntStream;
 @RequiredArgsConstructor
 @Slf4j
 public class SalesStatsService {
-    private final SalesStatsRepository salesStatsRepository;
     private final RedisTemplate<String, String> redisTemplate;
 
 
@@ -64,7 +64,6 @@ public class SalesStatsService {
                     productIdList.add(Long.parseLong(idStr));
                 }
             } catch (NumberFormatException e) {
-                // ✅ 형식 변환 오류 발생 시 예외 처리
                 log.warn("Invalid product ID format: {}", idStr, e);
             }
         }
@@ -94,6 +93,31 @@ public class SalesStatsService {
         String unionKey = UNION_KEY_PREFIX + days;
         redisTemplate.opsForZSet().unionAndStore(keys.get(0), keys.subList(1, keys.size()), unionKey);
         return unionKey;
+    }
+
+    /**
+     * 주문 아이템들의 판매 통계 업데이트
+     */
+    public void updateSalesStatistics(List<OrderItem> orderItems) {
+        String todayKey = POPULAR_KEY_PREFIX + LocalDate.now();
+
+        try {
+            // 주문 아이템들의 판매량을 Redis에 업데이트
+            for (OrderItem orderItem : orderItems) {
+                redisTemplate.opsForZSet().incrementScore(
+                        todayKey,
+                        orderItem.getProductId().toString(),
+                        orderItem.getQuantity()
+                );
+            }
+
+            // 키 만료시간 설정 (3일)
+            if (Boolean.FALSE.equals(redisTemplate.hasKey(todayKey))) {
+                redisTemplate.expire(todayKey, 3, TimeUnit.DAYS);
+            }
+        } catch (Exception e) {
+            log.error("Failed to update sales statistics in Redis for orderItems: {}", orderItems, e);
+        }
     }
 
 }

@@ -105,7 +105,7 @@ public class OrderFacadeIntegrationTest {
         List<OrderItemDTO> orderItems = List.of(orderItemDTO);
 
         // When: OrderFacade 를 호출
-        Order order1 = orderFacade.placeOrder(1L, 1L, orderItems);
+        Order order1 = orderFacade.placeOrder(1L, orderItems, 1L);
 
         // Then: 결과 검증
         assertNotNull(order1);

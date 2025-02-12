@@ -1,6 +1,7 @@
 package kr.hhplus.be.server.apps.order.domain.models.entity;
 
 import jakarta.persistence.*;
+import kr.hhplus.be.server.apps.coupon.domain.models.Coupon;
 import kr.hhplus.be.server.apps.order.domain.models.dto.OrderItemDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,32 +26,27 @@ public class Order {
     private Integer totalPaymentAmount;
 
     private Integer totalQuantity;
+    private Long couponId;
+
     // 주문 생성 메서드 (팩토리 메서드)
-    public static Order createOrder(Long userId, List<OrderItemDTO> orderItems) {
+    public static Order createOrder(Long userId, List<OrderItem> orderItems, Coupon coupon, Integer totalPaymentAmount) {
         if (userId == null) {
             throw new IllegalArgumentException("User ID cannot be null");
         }
-        if (orderItems == null || orderItems.isEmpty()) {
-            throw new IllegalArgumentException("Order items cannot be null or empty");
-        }
-
-        int totalPaymentAmount = 0;
-        for (OrderItemDTO orderItem : orderItems) {
-            totalPaymentAmount += orderItem.getPaymentAmount();
-        }
         int totalQuantity = 0;
-        for (OrderItemDTO orderItem : orderItems) {
+        for (OrderItem orderItem : orderItems) {
             totalQuantity += orderItem.getQuantity();
         }
+        Long couponId = 0L;
+        if (coupon != null) {
+            couponId = coupon.getCouponId();
+        }
+
         return Order.builder()
                 .userId(userId)
                 .totalPaymentAmount(totalPaymentAmount)
                 .totalQuantity(totalQuantity)
+                .couponId(couponId)
                 .build();
-    }
-
-    // 결제 금액 업데이트 메서드
-    public void applyDiscount(double discountedAmount) {
-        this.totalPaymentAmount = (int) discountedAmount;
     }
 }

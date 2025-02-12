@@ -33,11 +33,11 @@ public class Coupon {
     }
 
     // 할인 계산
-    public double calculateDiscount(double totalAmount, double discountPercent) {
+    public Integer calculateDiscount(Integer totalAmount) {
         if (totalAmount <= 0) {
             throw new IllegalArgumentException("Total amount must be greater than 0");
         }
-        return totalAmount * discountPercent;
+        return (int) ((int) totalAmount * discountPercent);
     }
 
     public static Coupon create(String code, Double discountPercent, LocalDate validDate, Integer maxCount, Integer currentCount) {
