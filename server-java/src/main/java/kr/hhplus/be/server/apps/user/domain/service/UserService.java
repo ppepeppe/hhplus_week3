@@ -12,6 +12,11 @@ import org.springframework.stereotype.Service;
 public class UserService {
     private final UserRepository userRepository;
 
+    /**
+     * 유저를 조회합니다.
+     *
+     * @param userId
+     */
     public User getUserByUserId(Long userId) {
         return userRepository.findUserByUserId(userId)
                 .orElseThrow(() -> new UserNotFoundException(
@@ -19,7 +24,4 @@ public class UserService {
                         "User not found with ID: " + userId
                 ));
     }
-
-
-
 }

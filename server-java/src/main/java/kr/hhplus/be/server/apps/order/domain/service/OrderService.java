@@ -1,7 +1,6 @@
 package kr.hhplus.be.server.apps.order.domain.service;
 
 import kr.hhplus.be.server.apps.coupon.domain.models.Coupon;
-import kr.hhplus.be.server.apps.order.domain.models.dto.OrderItemDTO;
 import kr.hhplus.be.server.apps.order.domain.models.entity.Order;
 import kr.hhplus.be.server.apps.order.domain.models.entity.OrderItem;
 import kr.hhplus.be.server.apps.order.domain.repository.OrderItemRepository;
@@ -21,6 +20,8 @@ public class OrderService {
     public final OrderItemRepository orderItemRepository;
     /**
      * 주문 상품 정보 저장
+     * @param order
+     * @param orderItems
      */
     public Order saveOrder(Order order, List<OrderItem> orderItems) {
         if (order == null) {
@@ -40,8 +41,13 @@ public class OrderService {
 
         return savedOrder;
     }
+
     /**
      * 주문 상품 정보 생성
+     * @param user
+     * @param orderItems
+     * @param coupon
+     * @param totalAmount
      */
     public Order createOrder(User user, List<OrderItem> orderItems, Coupon coupon, double totalAmount) {
         Order order = Order.createOrder(user.getUserId(), orderItems, coupon, (int) totalAmount);

@@ -88,7 +88,7 @@ public class UserPointServiceTest {
         when(userPointRepository.save(initialUserPoint)).thenReturn(updatedUserPoint);
 
         // When
-        UserPoint result = userPointService.orderUserPoint(USER_ID, 500);
+        UserPoint result = userPointService.deductUserPoint(USER_ID, 500);
 
         // Then
         assertThat(result.getPoint()).isEqualTo(500);

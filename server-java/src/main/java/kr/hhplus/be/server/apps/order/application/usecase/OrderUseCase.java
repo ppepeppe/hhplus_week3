@@ -1,16 +1,12 @@
 package kr.hhplus.be.server.apps.order.application.usecase;
 
-import kr.hhplus.be.server.apps.coupon.domain.models.Coupon;
 import kr.hhplus.be.server.apps.coupon.domain.service.CouponService;
 import kr.hhplus.be.server.apps.coupon.domain.service.UserCouponService;
 import kr.hhplus.be.server.apps.order.domain.models.dto.FinalAmountResult;
 import kr.hhplus.be.server.apps.order.domain.models.dto.OrderCommand;
 import kr.hhplus.be.server.apps.order.domain.models.dto.OrderPrepareResult;
 import kr.hhplus.be.server.apps.order.domain.models.entity.Order;
-import kr.hhplus.be.server.apps.order.domain.models.entity.OrderItem;
-import kr.hhplus.be.server.apps.order.domain.repository.OrderItemRepository;
 import kr.hhplus.be.server.apps.order.domain.service.OrderService;
-import kr.hhplus.be.server.apps.product.domain.models.Product;
 import kr.hhplus.be.server.apps.product.domain.service.ProductService;
 import kr.hhplus.be.server.apps.stats.domain.service.SalesStatsService;
 import kr.hhplus.be.server.apps.user.domain.models.entity.User;
@@ -20,7 +16,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -58,7 +53,7 @@ public class OrderUseCase {
                     .build();
         }
         // 4. 잔액 차감
-        userPointService.orderUserPoint(user.getUserId(), finalAmountResult.getFinalAmount());
+        userPointService.deductUserPoint(user.getUserId(), finalAmountResult.getFinalAmount());
 
         // 5. 주문 생성
         Order order = orderService.createOrder(user, orderPrepareResult.getOrderItems(), finalAmountResult.getCoupon(), finalAmountResult.getFinalAmount());

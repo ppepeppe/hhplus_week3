@@ -13,7 +13,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
@@ -24,7 +23,9 @@ import java.util.List;
 public class ProductService {
     public final ProductRepository productRepository;
     /**
-     * 상품 조회
+     * 상품을 조회합니다
+     *
+     * @param productId
      */
     public Product getProductByProductId(long productId) {
         return productRepository.findProductByProductId(productId)
@@ -34,6 +35,9 @@ public class ProductService {
 
     /**
      * 상품 주문 시 수량 차감 및 판매량 증가 (비관적 락 대신 분산 락으로 보호되는 로직)
+     *
+     * @param productId
+     * @param quantity
      */
     @Transactional
     public Product orderProduct(long productId, Integer quantity) {
@@ -53,16 +57,28 @@ public class ProductService {
     }
     /**
      * 전체 상품 리스트 조회
+     *
+     * @param page
+     * @param size
      */
     public Page<Product> getProductList(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("productId").ascending());
         return productRepository.findAll(pageable);
     }
 
+    /**
+     * productId로 product정보를 제공합니다.
+     *
+     * @param productIds
+     */
     public List<Product> getProductListTopN(List<Long> productIds) {
         return productRepository.findAllById(productIds);
     }
 
+    /**
+     * 주문 아이템에 갯수 검정을 한다
+     * @param items
+     */
     @Transactional
     public OrderPrepareResult validateAndPrepareOrderItems(List<OrderItemDTO> items) {
         List<OrderItem> orderItems = new ArrayList<>();
@@ -91,6 +107,10 @@ public class ProductService {
         return new OrderPrepareResult(orderItems, totalAmount);
     }
 
+    /**
+     * 상품 별 주문 개수를 차감합니다.
+     * @param orderItems
+     */
     public void decreaseStock(List<OrderItem> orderItems) {
         orderItems.forEach(item -> {
             Long productId = item.getProductId();

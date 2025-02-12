@@ -1,15 +1,10 @@
 package kr.hhplus.be.server.apps.stats.domain.service;
 
 import kr.hhplus.be.server.apps.order.domain.models.entity.OrderItem;
-import kr.hhplus.be.server.apps.product.domain.models.Product;
-import kr.hhplus.be.server.apps.product.domain.service.ProductService;
-import kr.hhplus.be.server.apps.stats.domain.repository.SalesStatsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -17,7 +12,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.IntStream;
 
 @Service
 @RequiredArgsConstructor
@@ -31,7 +25,10 @@ public class SalesStatsService {
     private static final String UNION_KEY_PREFIX = "popular:union:";
 
     /**
-     * 지난 N일 동안의 인기 상품 ID 조회
+     * 일자별 인기상품 n개를 조회합니다.
+     *
+     * @param days
+     * @param topN
      */
     public List<Long> getPopularProductIds(int days, int topN) {
         List<String> keys = generatePopularKeys(days);
@@ -48,7 +45,9 @@ public class SalesStatsService {
     }
 
     /**
-     * Redis에서 특정 날짜의 인기 상품 ID 조회
+     * Key 값으로 레디스 데이터를 가져옵니다.
+     * @param key
+     * @param topN
      */
     private List<Long> getProductsFromRedisKey(String key, int topN) {
         Set<String> productIds = redisTemplate.opsForZSet().reverseRange(key, 0, topN - 1);
@@ -72,7 +71,9 @@ public class SalesStatsService {
     }
 
     /**
-     * 최근 N일 동안의 Redis 키 리스트 생성
+     *
+     * 일자간의 레디스 키를 생성합니다.
+     * @param days
      */
     private List<String> generatePopularKeys(int days) {
         List<String> keys = new ArrayList<>();
@@ -82,9 +83,11 @@ public class SalesStatsService {
         return keys;
     }
 
-
     /**
-     * 여러 날짜의 인기 상품 데이터를 합산하는 Redis 키 생성
+     * n일간의 레디스 합산 키를 생성합니다/
+     *
+     * @param keys
+     * @param days
      */
     private String createUnionKey(List<String> keys, int days) {
         if (keys.size() == 1) {
@@ -96,7 +99,8 @@ public class SalesStatsService {
     }
 
     /**
-     * 주문 아이템들의 판매 통계 업데이트
+     * 주문이 일어나면 해당일의 판매량을 업데이트 합니다.
+     * @param orderItems
      */
     public void updateSalesStatistics(List<OrderItem> orderItems) {
         String todayKey = POPULAR_KEY_PREFIX + LocalDate.now();
