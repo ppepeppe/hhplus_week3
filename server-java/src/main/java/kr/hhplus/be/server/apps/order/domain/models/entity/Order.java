@@ -2,7 +2,6 @@ package kr.hhplus.be.server.apps.order.domain.models.entity;
 
 import jakarta.persistence.*;
 import kr.hhplus.be.server.apps.coupon.domain.models.Coupon;
-import kr.hhplus.be.server.apps.order.domain.models.dto.OrderItemDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -34,6 +33,9 @@ public class Order {
             throw new IllegalArgumentException("User ID cannot be null");
         }
         int totalQuantity = 0;
+        if (orderItems == null) {
+            throw new IllegalArgumentException("Order items cannot be null");
+        }
         for (OrderItem orderItem : orderItems) {
             totalQuantity += orderItem.getQuantity();
         }
