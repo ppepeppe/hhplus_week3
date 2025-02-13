@@ -10,6 +10,8 @@
 5. [API specification](./docs/api_specification.md)
 6. [project structure](./docs/project_structure.md)
 7. [swagger](./docs/swagger.md)
+8. [DB인덱스](#8-db인덱스)
+
 
 **test 조건**
 docker desktop 실행 , local mysql 중지(포트겹침)
@@ -237,3 +239,271 @@ Write through(쓰다 통해서)
 	•	TTL 설정을 통해 특정 시간 이후 자동 만료 가능
 
  
+
+# 8. DB인덱스
+
+### 1. 인덱스란
+
+**1.1 인덱스란**
+- 인덱스는 데이터베이스 테이블의 검색 속도를 향상시키기 위한 자료구조로 백과사전의 색인과 비슷
+- 저장되는 컬럼의 값을 사용하여 항상 정렬된 상태를 유지하는 것이 특징, 이러한 특징으로 인해 인덱스는 INSERT, UPDATE, DELETE의 성능이 희생된다는 단점이 잇음.
+
+**1.2 인덱스 자료구조**
+
+MySQL 기준으로 B+Tree와 같은 변형 B-Tree 자료구조를 이용해서 인덱스를 구현
+기본 토대인 B-Tree 인덱스는 컬럼의 값을 변형하지 않고 인덱스 구조체 내에서 항상 정렬된 상태로 유지합니다.
+
+B-Tree(Balanced-Tree)에서는 크게 3가지 노드 존재. 
+최상위에 하나의 루트 노드가 존재하며, 가장 하위 노드인 리프 노드가 존재. 이 두 노드의 중간에 존재하는 브랜치 노드가 존재. 
+최하위 노드인 리프 노드에는 실제 데이터 레코드를 찾아가기 위한 주소값을 가지고 있음
+
+
+**1.3 MySQL 스캔 방식**
+MySQL에는 크게 인덱스 레인지 스캔, 인덱스 풀 스캔, 루스 인덱스 스캔 방식이 있음
+
+인덱스 레인지 스캔
+- 검색할 인덱스 범위가 결정되었을 경우 사용하며 가장 빠른특징.
+ 
+- 인덱스에서 조건을 만족하는 값이 저장된 시작 리프 노드를 찾음(index seek)
+- 시작 리프 노드부터 필요한 만큼 인덱스를 차례대로 읽음 (index scan)
+- 인덱스 키와 레코드 주소를 이용해 저장된 페이지를 가져오고 레코드를 읽어옴.
+- 레코드를 읽어오는 과정에서 랜덤 IO가 발생할 수 있음.
+- 읽어야할 데이터 레코드가 전체 20-25%의 경우에는 풀 테이블 스캔(순차 IO를 이용)이 더욱 효과적일 수 있다.
+
+인덱스 풀 스캔
+- 인덱스를 사용하지만 인덱스를 처음부터 끝까지 모두 읽는 방식입니다.
+
+- 인덱스를 ABC 순서로 만들었는데 조건절에 B 혹은 C로 검색하는 경우 사용
+- 인덱스를 생성하는 목적은 아니지만, 그래도 풀 테이블 스캔보다는 낫다.
+
+루스 인덱스 스캔
+- 듬성듬성하게 인덱스를 읽는 것을 의미
+- 중간에 필요하지 않은 인덱스 키 값은 무시하고 다음으로 넘어가는 형태로 처리
+- group by, max(), min() 함수에 대해 최적화하는 경우에 사용
+
+
+### 2. 쿼리 분석
+**2.1 주요 쿼리 분석**
+
+분석 대상 Repository 및 주요 쿼리:
+- **CouponJpaRepository**  
+  - `findCouponByCouponIdWithLock`
+  - `findCouponByCouponId`
+- **UserCouponJpaRepository**  
+  - `findByUserIdAndCouponId`
+  - `findAllByUserId`
+- **ProductJpaRepository**  
+  - `findProductByProductId`
+  - `findAll(Pageable pageable)`
+  - `findByIdWithLock`
+- **SalesStatsJpaRepository**  
+  - `findTopSellingProductIds` (조건: sold_date ≥ :startDate, 또는 BETWEEN :startDate AND :endDate)
+  - `updateSalesStats` (ON DUPLICATE KEY UPDATE 사용)
+- **UserPointJpaRepository**  
+  - `findUserPointByUserIdWithLock`
+  - `findUserPointByUserId`
+
+**2.2 쿠폰 관련 쿼리**
+
+**쿼리:** `SELECT c FROM Coupon c WHERE c.couponId = :couponId`  
+
+**용도:** 쿠폰 조회 (락 버전/락 미사용 버전)  
+
+**인덱스 고려 :**  
+  - `couponId`는 PK 으로 기본 인덱스 설정이되므로 별도 인덱스 추가가 필요 없음
+
+
+**2.3 UserCoupon 관련 쿼리**
+
+- **쿼리:** `findByUserIdAndCouponId(Long userId, Long couponId)` 
+
+  **용도:** 특정 사용자와 쿠폰 조합으로 조회  
+
+- **쿼리:** `findAllByUserId(Long userId)`  
+
+  **용도:** 특정 사용자의 모든 쿠폰 조회 
+
+**인덱스 고려 :**  
+  - user_id 가 pk는 아니지만 단순 조회에 쓰이기 때문에 인덱스 불필요할 것으로 예상
+  - user_id, coupon_id 가 pk는 아니지만 단순 조회에 쓰이기 때문에 인덱스 불필요할 것으로 예상
+
+**2.4 Product 관련 쿼리**
+
+- **쿼리:** `findProductByProductId(Long productId)` 
+
+  **용도:** 특정 상품을 상품 ID로 조회
+
+- **쿼리:** `findByIdWithLock(Long productId)`  
+
+  **용도:** 특정 상품을 상품 ID로 조회(비관적락)
+
+- **쿼리:** `findAll(Pageable pageable)`  
+
+  **용도:** 상품 조회 페이지 네이션 이용
+
+
+**인덱스 고려 :**  
+  - `productId`는 PK 으로 기본 인덱스 설정이되므로 별도 인덱스 추가가 필요 없음
+  - `pagenation` 자체에 limit가 걸려있어 추가 적인 설정 필요 없음
+
+
+
+**2.5 Sales 관련 쿼리**
+
+- **쿼리:** `findTopSellingProductIds` 
+
+  **용도:** 날짜 범위 별 인기 상품을 조회한다
+
+- **쿼리:** `updateSalesStats`  
+
+  **용도:** 상품 판매가 일어나면 통계테이블의 상품 수량을 업데이트한다
+
+**인덱스 고려 :**  
+  - sold_date 필드가 날짜 범위로 필터링에 사용되므로 인덱스가 필요
+  - product_id는 그룹화에 사용되므로 인덱스가 필요
+  - SUM(s.sold_quantity) DESC에서 정렬이 필요하므로 해당 필드에 대한 인덱스가 유리할 수 있음
+
+**2.6 UserPoint 관련 쿼리** 
+
+- **쿼리:** `findUserPointByUserIdWithLock` 
+
+  **용도:** 유저 포인트를 유저ID로 조회한다 (비관적락)
+- **쿼리:** `findUserPointByUserId`  
+
+  **용도:** 유저포인트를 유저ID로 조회한다
+
+**인덱스 고려 :**  
+  - user_id 가 pk는 아니지만 단순 조회에 쓰이기 때문에 인덱스 불필요할 것으로 예상
+
+### 3. 문제 쿼리 분석
+
+```sql
+SELECT s.product_id 
+FROM sales_stats s 
+WHERE s.sold_date BETWEEN :startDate AND :endDate 
+GROUP BY s.product_id 
+ORDER BY SUM(s.sold_quantity) DESC 
+LIMIT :topN
+```
+**3.1 쿼리분석**
+
+날짜 범위 조회 (BETWEEN)
+GROUP BY를 통한 집계
+ORDER BY와 집계 함수(SUM) 사용
+LIMIT을 통한 결과 제한
+
+**3.2 인덱스 적용**
+
+2.1 인덱스 적용전 실행 계획 및 시간
+- 기본 데이터 준비 (200만건)
+
+![alt](./docs/img/데이터수.png)
+
+ - 출력 시간
+
+![alt](./docs/img/인덱스전.png)
+ 
+ - explain
+
+![alt](./docs/img/인덱스전_explain.png)
+
+- db에서 직접 조회하는 경우 0.58 초 정도가 소요되며
+실제 spring 을 활용해 조회할 경우 connection, 
+다른 로직 처리등을 진행하면 이 쿼리에 해당하는 api는 1초이상의 시간이 소요될것으로 예상돼 불편을 줄수 있음
+
+
+ -> 인덱스를 이용해 개선 필요
+- 복합 인덱스 설정
+
+![alt](./docs/img/인덱스설정.png)
+
+- 쿼리 조회 결과
+
+![alt](./docs/img/인덱스후.png)
+
+(0.58 -> 0.26 ) 줄어든 것 확인
+
+![alt](./docs/img/인덱스후_explain.png)
+
+하지만 3개의 복합인덱스를 걸어뒀기 때문에 Using temporary; Using filesort는 유지되는 것을 알 수 있음
+
+ORDER BY 절에 사용된 SUM(sold_quantity)는 집계 함수이기 때문에, 인덱스만으로 미리 정렬된 값을 얻을 수 없음
+
+즉, WHERE와 GROUP BY는 커버링 인덱스로 최적화할 수 있지만,
+ORDER BY SUM(sold_quantity) DESC는 각 그룹의 합을 계산한 후 정렬해야 하므로,
+임시 테이블과 파일 소트가 발생하는 것을 완전히 없애기는 어려움.
+
+
+인덱스를 다르게 걸었을 떄의 차이를 알 수 있게 인덱스 설정을 수정 해봄
+
+product_id, sold_date 순서로 인덱스 설정
+
+- 복합 인덱스 설정
+
+![alt](./docs/img/인덱스설정_id_date.png)
+
+- 쿼리 조회 결과
+
+![alt](./docs/img/인덱스후_id_date.png)
+
+오히려 2초로 늘어났음을 확인
+
+**결론**
+#### 1. 단일 인덱스 (sold_date)
+- **구성**:  
+  인덱스에 `sold_date`만 포함
+
+- **WHERE 절**:  
+  - `sold_date` 범위 조건에 대해 인덱스 스캔으로 빠르게 필터링 가능
+
+- **GROUP BY 및 집계**:  
+  - 인덱스에 `product_id`와 `sold_quantity`가 없으므로,  
+    필터링 후 각 행의 해당 컬럼을 가져오기 위해 추가적인 테이블 데이터 페이지 조회가 필요
+
+- **결과**:  
+  - WHERE 조건은 최적화되지만, GROUP BY와 집계 시 추가 조회로 인한 오버헤드가 발생하여 전체 성능이 떨어질 가능성이 있음
+
+---
+
+#### 2. 복합 인덱스 (sold_date, product_id, sold_quantity)
+- **구성**:  
+  인덱스에 `sold_date`, `product_id`, `sold_quantity`가 순서대로 포함
+
+- **WHERE 절**:  
+  - 인덱스의 첫 번째 컬럼인 `sold_date`로 날짜 범위 필터링이 효율적으로 수행됨
+
+- **GROUP BY 및 집계**:  
+  - 두 번째 컬럼인 `product_id`가 바로 그룹핑에 사용됨  
+  - 세 번째 컬럼인 `sold_quantity`가 포함되어 있어,  
+    `SUM(sold_quantity)` 계산도 인덱스 내에서 처리 가능 (커버링 인덱스 효과)
+
+- **전체 과정**:  
+  - 인덱스만으로 WHERE, GROUP BY, 집계까지 모두 처리할 수 있으므로,  
+    테이블 데이터 페이지 접근 횟수가 크게 줄어듦
+
+- **결과**:  
+  - 가장 효율적인 인덱스 옵션으로, 전반적인 쿼리 성능을 향상시킴
+
+---
+
+#### 3. 복합 인덱스 (product_id, sold_date, sold_quantity)
+- **구성**:  
+  인덱스에 `product_id`, `sold_date`, `sold_quantity` 순서로 포함
+
+- **WHERE 절**:  
+  - 첫 번째 컬럼이 `product_id`이나, 쿼리에서는 `product_id`에 대한 필터링 조건이 없음  
+  - 이로 인해 인덱스의 첫 번째 키를 활용하지 못하여,  
+    `sold_date`에 대한 효과적인 범위 검색이 어려움
+
+- **GROUP BY 및 집계**:  
+  - `product_id`는 GROUP BY에 사용되지만,  
+    WHERE 조건 최적화가 제대로 이루어지지 않아 전체 인덱스 스캔 또는 불필요한 데이터 접근이 발생
+
+- **결과**:  
+  - 날짜 조건에 맞는 데이터를 찾기 위해 인덱스 전체를 스캔하거나 비효율적인 경로를 선택하게 되어,  
+    쿼리 처리 시간이 길어짐 (성능 저하)
+
+
+추후 상품명으로 like 조회 api를 추가하여 그 부분에도 개선사항이 있을 지 생각해볼 예정임
+
+

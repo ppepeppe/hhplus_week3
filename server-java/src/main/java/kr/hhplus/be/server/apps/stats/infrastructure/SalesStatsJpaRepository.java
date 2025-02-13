@@ -11,14 +11,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface SalesStatsJpaRepository extends JpaRepository<SalesStats, Long> {
-    @Query(value = "SELECT s.product_id " +
-            "FROM sales_stats s " +
-            "WHERE s.sold_date >= :startDate " +
-            "GROUP BY s.product_id " +
-            "ORDER BY SUM(s.sold_quantity) DESC " +
-            "LIMIT :topN", nativeQuery = true)
-    List<Long> findTopSellingProductIds(@Param("startDate") LocalDate startDate, @Param("topN") int topN);
-
     /**
      * 특정 기간 동안 가장 많이 팔린 상품 ID 조회 (TOP N)
      */
