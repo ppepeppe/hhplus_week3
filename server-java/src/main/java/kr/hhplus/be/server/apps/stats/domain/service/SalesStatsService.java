@@ -1,10 +1,14 @@
 package kr.hhplus.be.server.apps.stats.domain.service;
 
+import io.lettuce.core.RedisException;
 import kr.hhplus.be.server.apps.order.domain.models.entity.OrderItem;
+import kr.hhplus.be.server.apps.stats.domain.repository.SalesStatsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -18,30 +22,42 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class SalesStatsService {
     private final RedisTemplate<String, String> redisTemplate;
+    private final SalesStatsRepository salesStatsRepository;
 
 
 
     private static final String POPULAR_KEY_PREFIX = "popular:";
     private static final String UNION_KEY_PREFIX = "popular:union:";
 
-    /**
-     * 일자별 인기상품 n개를 조회합니다.
-     *
-     * @param days
-     * @param topN
-     */
     public List<Long> getPopularProductIds(int days, int topN) {
-        List<String> keys = generatePopularKeys(days);
-        String unionKey = createUnionKey(keys, days);
+        try {
+            // 1. Redis에서 조회 시도
+            List<String> keys = generatePopularKeys(days);
+            String unionKey = createUnionKey(keys, days);
+            List<Long> popularProductIds = getProductsFromRedisKey(unionKey, topN);
 
-        List<Long> popularProductIds = getProductsFromRedisKey(unionKey, topN);
+            // 생성된 임시 키 삭제
+            if (keys.size() > 1) {
+                redisTemplate.delete(unionKey);
+            }
 
-        // 생성된 임시 키 삭제
-        if (keys.size() > 1) {
-            redisTemplate.delete(unionKey);
+            // Redis에 데이터가 없는 경우 DB 조회
+            if (popularProductIds.isEmpty()) {
+                return getPopularProductIdsFromDB(days, topN);
+            }
+
+            return popularProductIds;
+
+        } catch (RedisConnectionFailureException | RedisException e) {
+            log.warn("Redis operation failed, falling back to database", e);
+            return getPopularProductIdsFromDB(days, topN);
         }
+    }
 
-        return popularProductIds;
+    private List<Long> getPopularProductIdsFromDB(int days, int topN) {
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusDays(days);
+        return salesStatsRepository.findTopSellingProductIds(startDate, endDate, topN);
     }
 
     /**
@@ -97,16 +113,40 @@ public class SalesStatsService {
         redisTemplate.opsForZSet().unionAndStore(keys.get(0), keys.subList(1, keys.size()), unionKey);
         return unionKey;
     }
+//
+//    /**
+//     * 주문이 일어나면 해당일의 판매량을 업데이트 합니다.
+//     * @param orderItems
+//     */
+//    public void updateSalesStatistics(List<OrderItem> orderItems) {
+//        String todayKey = POPULAR_KEY_PREFIX + LocalDate.now();
+//
+//        try {
+//            // 주문 아이템들의 판매량을 Redis에 업데이트
+//            for (OrderItem orderItem : orderItems) {
+//                redisTemplate.opsForZSet().incrementScore(
+//                        todayKey,
+//                        orderItem.getProductId().toString(),
+//                        orderItem.getQuantity()
+//                );
+//            }
+//
+//            // 키 만료시간 설정 (3일)
+//            if (Boolean.FALSE.equals(redisTemplate.hasKey(todayKey))) {
+//                redisTemplate.expire(todayKey, 3, TimeUnit.DAYS);
+//            }
+//        } catch (Exception e) {
+//            log.error("Failed to update sales statistics in Redis for orderItems: {}", orderItems, e);
+//        }
+//    }
 
-    /**
-     * 주문이 일어나면 해당일의 판매량을 업데이트 합니다.
-     * @param orderItems
-     */
+    @Transactional
     public void updateSalesStatistics(List<OrderItem> orderItems) {
         String todayKey = POPULAR_KEY_PREFIX + LocalDate.now();
+        LocalDate today = LocalDate.now();
 
+        // 1. Redis 업데이트 시도
         try {
-            // 주문 아이템들의 판매량을 Redis에 업데이트
             for (OrderItem orderItem : orderItems) {
                 redisTemplate.opsForZSet().incrementScore(
                         todayKey,
@@ -115,12 +155,28 @@ public class SalesStatsService {
                 );
             }
 
-            // 키 만료시간 설정 (3일)
+            // Redis 키 만료시간 설정 (3일)
             if (Boolean.FALSE.equals(redisTemplate.hasKey(todayKey))) {
                 redisTemplate.expire(todayKey, 3, TimeUnit.DAYS);
             }
+        } catch (RedisConnectionFailureException | RedisException e) {
+            log.error("Failed to update Redis statistics", e);
+            // Redis 실패는 무시하고 계속 진행 (DB 업데이트는 필수)
+        }
+
+        // 2. DB 업데이트 (SalesStats 테이블)
+        try {
+            for (OrderItem orderItem : orderItems) {
+                // UPSERT 방식으로 통계 업데이트
+                salesStatsRepository.updateSalesStats(
+                        orderItem.getProductId(),
+                        today,
+                        orderItem.getQuantity()
+                );
+            }
         } catch (Exception e) {
-            log.error("Failed to update sales statistics in Redis for orderItems: {}", orderItems, e);
+            log.error("Failed to update DB statistics", e);
+            throw new RuntimeException("Failed to update sales statistics", e);
         }
     }
 
