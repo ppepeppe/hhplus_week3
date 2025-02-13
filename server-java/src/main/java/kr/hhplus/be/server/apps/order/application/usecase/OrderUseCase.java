@@ -12,6 +12,7 @@ import kr.hhplus.be.server.apps.stats.domain.service.SalesStatsService;
 import kr.hhplus.be.server.apps.user.domain.models.entity.User;
 import kr.hhplus.be.server.apps.user.domain.service.UserPointService;
 import kr.hhplus.be.server.apps.user.domain.service.UserService;
+import kr.hhplus.be.server.apps.mock.DataPlatformService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,7 @@ public class OrderUseCase {
     private final UserCouponService userCouponService;
     private final UserPointService userPointService;
     private final SalesStatsService salesStatsService;
+    private final DataPlatformService dataPlatformService;
 
     @Transactional
     public Order placeOrder(OrderCommand command) {
@@ -64,7 +66,7 @@ public class OrderUseCase {
         salesStatsService.updateSalesStatistics(orderPrepareResult.getOrderItems());
 
         // 9. 외부 데이터 플랫폼 전송 (비동기)
-//        dataPlatformService.sendOrderData(order);
+        dataPlatformService.sendOrderData(order);
 
         return order;
     }
