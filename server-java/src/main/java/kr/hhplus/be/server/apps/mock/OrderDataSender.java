@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.mock;
+package kr.hhplus.be.server.apps.mock;
 
 import kr.hhplus.be.server.apps.order.domain.models.entity.Order;
 import org.springframework.stereotype.Service;

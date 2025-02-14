@@ -1,4 +1,4 @@
-package kr.hhplus.be.server.mock;
+package kr.hhplus.be.server.apps.mock;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
