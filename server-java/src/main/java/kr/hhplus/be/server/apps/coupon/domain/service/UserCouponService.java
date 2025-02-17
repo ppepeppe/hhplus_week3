@@ -2,13 +2,10 @@ package kr.hhplus.be.server.apps.coupon.domain.service;
 
 import kr.hhplus.be.server.apps.coupon.domain.models.UserCoupon;
 import kr.hhplus.be.server.apps.coupon.domain.repository.UserCouponRepository;
-import kr.hhplus.be.server.apps.user.domain.models.entity.User;
 import kr.hhplus.be.server.common.exception.InvalidCouponException;
 import kr.hhplus.be.server.common.exception.UserCouponNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -49,14 +46,14 @@ public class UserCouponService {
         return userCouponRepository.findAllByUserId(userId);
     }
     /**
-     * 유저쿠폰 사용여부
+     * 유저쿠폰 사용 처리
      */
-        public void useUserCoupon(Long userId, Long couponId) {
-            UserCoupon userCoupon = userCouponRepository.findUserCouponByUserIdAndCouponId(userId, couponId)
-                    .orElseThrow(() -> new UserCouponNotFoundException("UserCoupon not found for User ID: " + userId + ", Coupon ID: " + couponId));
-            userCoupon.markAsUsed(); // 도메인 객체 메서드 호출
-            userCouponRepository.save(userCoupon);
-        }
+    public void useUserCoupon(Long userId, Long couponId) {
+        UserCoupon userCoupon = userCouponRepository.findUserCouponByUserIdAndCouponId(userId, couponId)
+                .orElseThrow(() -> new UserCouponNotFoundException("UserCoupon not found for User ID: " + userId + ", Coupon ID: " + couponId));
+        userCoupon.markAsUsed(); // 도메인 객체 메서드 호출
+        userCouponRepository.save(userCoupon);
+    }
     public void validateIds(Long userId, Long couponId) {
         if (userId == null || couponId == null) {
             throw new IllegalArgumentException("User ID and Coupon ID cannot be null.");
