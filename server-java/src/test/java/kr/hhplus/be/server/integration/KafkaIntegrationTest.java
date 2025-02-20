@@ -4,14 +4,19 @@ import kr.hhplus.be.server.apps.order.domain.models.entity.Order;
 import kr.hhplus.be.server.config.kafka.OrderEventConsumer;
 import kr.hhplus.be.server.config.kafka.OrderEventProducer;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.List;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+
 @SpringBootTest
+@Tag("kafka")  // 태그로 구분
 class KafkaIntegrationTest {
     @Autowired
     private OrderEventProducer producer;

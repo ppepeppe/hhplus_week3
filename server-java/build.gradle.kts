@@ -91,3 +91,16 @@ tasks.jacocoTestCoverageVerification {
 tasks.named("check") {
 	dependsOn(tasks.jacocoTestCoverageVerification) // ✅ 커버리지 검증 포함
 }
+tasks.test {
+	useJUnitPlatform {
+		excludeTags("kafka")  // 기본 테스트에서 제외
+	}
+}
+
+// Kafka 테스트를 위한 별도 태스크
+tasks.register<Test>("kafkaTest") {
+	useJUnitPlatform {
+		includeTags("kafka")
+	}
+	mustRunAfter(tasks.test)  // 일반 테스트 후 실행
+}
