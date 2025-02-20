@@ -713,3 +713,141 @@ PaymentFailedEvent 발행
   보상 트랜잭션은 한 서비스에서 실패가 발생하면 이전 단계의 작업을 취소하거나 복구하는 방식으로 실행
 
 
+# Apache Kafka 개요
+
+Apache Kafka는 **실시간 데이터 파이프라인**과 **스트리밍 애플리케이션**을 구축하기 위해 널리 사용되는 **분산형 스트리밍 플랫폼** 입니다.
+ 높은 처리량, 낮은 지연 시간, 확장성을 제공하여 대규모 데이터 흐름을 처리하는 데 적합합니다. 이 문서는 Kafka의 주요 개념인 **Producer, Consumer, Broker, Topic, Partition, Consumer Group, Rebalancing**에 대해 설명합니다.
+
+---
+
+## 1. **Producer & Consumer**
+
+### Producer (프로듀서)
+- **정의:** 
+  - **메시지를 Kafka 브로커에 발행**하는 서비스
+- **기능:**
+  - 특정 **토픽(Topic)** 에 메시지를 발행
+  - 메시지를 어떤 **파티션(Partition)** 에 저장할지 결정
+    - `Key`가 있는 경우: **Key 해시값**을 이용해 특정 파티션에 저장
+    - `Key`가 없는 경우: **라운드 로빈 (Round-Robin)** 방식으로 균등하게 분배
+
+---
+
+### Consumer (컨슈머)
+- **정의:** 
+  - **Kafka 브로커에 적재된 메시지를 읽어오는** 서비스
+- **기능:**
+  - 각 **파티션 별 Offset** 을 유지하여 어디까지 처리했는지 추적
+  - 메시지를 읽을 때마다 **Current-Offset** 을 업데이트하고 **Commit** 해야 함
+    - `Current-Offset`: 
+      - 컨슈머가 마지막으로 처리한 메시지의 위치를 나타냄
+      - 동일한 메시지를 재처리하지 않고, 처리하지 않은 메시지를 건너뛰지 않도록 마지막으로 처리한 offset을 저장
+  - **Offset Reset:**
+    - 오류 발생 시 또는 특정 시점으로 돌아가야 할 때 `--reset-offsets` 옵션 사용
+    - Consumer Group 단위로 **Offset 되돌리기** 가능
+
+---
+
+## 2. **Broker (브로커)**
+- **정의:**
+  - **Kafka 서버 유닛**으로 Producer와 Consumer 사이에서 메시지를 관리
+- **기능:**
+  - Producer로부터 메시지를 받아 **디스크에 저장**하고 **Offset 지정**
+  - Consumer의 요청에 응답하여 저장된 메시지 **전송**
+- **Cluster 내의 역할:**
+  - **Controller**:
+    - 다른 브로커 상태 모니터링
+    - 장애 발생 시 **Leader 파티션** 을 다른 브로커로 **재분배**
+  - **Coordinator**:
+    - **Consumer Group 모니터링**
+    - Consumer 장애 시 **Partition Rebalance (재배정)** 수행
+
+---
+
+## 3. **Message (메시지)**
+- **정의:**
+  - Kafka에서 **데이터의 최소 단위**
+- **구조:**
+  - `<Key, Message>` 형태로 구성
+    - `Key`: 메시지의 분류 또는 순서를 보장하기 위한 식별자
+    - `Message`: 실제 데이터 내용
+
+---
+
+## 4. **Topic & Partition (토픽 & 파티션)**
+
+### Topic
+- **정의:** 
+  - **메시지를 분류**하기 위한 논리적인 단위
+  - N개의 **Partition** 으로 구성
+- **특징:**
+  - 같은 토픽의 메시지는 여러 파티션에 나누어 저장
+  - 대용량 트래픽을 파티션 개수만큼 **병렬 처리** 가능
+
+---
+
+### Partition
+- **정의:** 
+  - **메시지를 물리적으로 저장**하는 단위
+- **특징:**
+  - **순차 처리 보장:** 한 파티션 안에서는 메시지 순서가 보장됨
+  - **병렬 처리 가능:** 여러 파티션으로 나누어 동시다발적인 처리가 가능
+  - **Partitioner 사용:** 
+    - Producer가 메시지 발행 시, **Key 해시** 또는 **Round-Robin** 방식으로 저장할 파티션 결정
+    - **Key**가 있는 경우: 같은 Key는 항상 **같은 파티션**에 저장되어 순서 보장
+    - **Key**가 없는 경우: Round-Robin 방식으로 **균등 분배**
+- **제약사항:**
+  - **한 파티션은 하나의 Consumer 에서만 소비** 가능
+    - 여러 Consumer가 같은 파티션의 메시지를 읽으면 **순서 보장 불가**
+
+---
+
+## 5. **Consumer Group (컨슈머 그룹)**
+- **정의:** 
+  - **여러 개의 Consumer가 하나의 토픽을 동시에 소비**하기 위해 묶는 그룹
+- **특징:**
+  - 하나의 Consumer Group 내에서 **같은 파티션은 하나의 Consumer** 만 소비
+  - **Consumer 확장성 보장:** 
+    - Consumer Group에 Consumer 추가 시, 파티션을 **Rebalance (재배정)** 함
+  - **여러 서비스에서 동일한 토픽을 소비**할 때 사용
+    - 예: 주문 완료 메시지를 **결제 서비스**와 **상품 서비스**에서 각각 소비
+- **설정 방법:**
+  - 일반적으로 **애플리케이션 단위**로 Consumer Group 생성
+  - 동일한 Topic에 대해 **여러 그룹**을 만들어 구독 가능
+
+---
+
+## 6. **Rebalancing (리밸런싱)**
+- **정의:** 
+  - **Consumer Group의 가용성과 확장성**을 위해 파티션 소유권을 재배정
+- **발생 시점:**
+  1. Consumer Group 내 **새로운 Consumer 추가** 시
+  2. Consumer 장애 발생 시 **다른 Consumer에 파티션 재배정**
+  3. **Topic에 새로운 Partition 추가** 시
+- **주의사항:**
+  - 리밸런싱 중에는 **메시지를 읽을 수 없음**
+  - **장애 대응 및 확장성**을 위한 필수 개념
+
+---
+
+## 7. **참고 이미지**
+- **Topic & Partition 구조:**
+  ![Topic & Partition](https://prod-files-secure.s3.us-west-2.amazonaws.com/83c75a39-3aba-4ba4-a792-7aefe4b07895/dbf132c7-fea8-4dc1-9479-adb08f670f8b/Untitled.png)
+- **Consumer Group & Partition 매칭:**
+  ![Consumer Group](https://prod-files-secure.s3.us-west-2.amazonaws.com/83c75a39-3aba-4ba4-a792-7aefe4b07895/19e413f1-bb1b-4f32-92f6-1b10ac90ab4e/Untitled.png)
+
+---
+
+## 8. **정리 및 활용 팁**
+- **Producer** 에서는 **Partitioner** 설정을 통해 메시지 순서 보장
+- **Consumer Group** 은 애플리케이션 단위로 관리하여 **확장성과 가용성** 유지
+- **Rebalancing** 발생 시 **일시적 정지**에 유의
+- **Offset 관리** 를 통해 **중복 처리 방지** 및 **정확한 순서 유지**
+
+---
+
+## 9. kafka 결과
+
+![alt](./docs/img/kafka결과.png)
+
+
