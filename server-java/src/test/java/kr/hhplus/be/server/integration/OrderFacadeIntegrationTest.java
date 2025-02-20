@@ -111,10 +111,31 @@ public class OrderFacadeIntegrationTest {
         assertNotNull(order1);
         assertEquals(750, order1.getTotalPaymentAmount()); // 할인 금액 검증
     }
+    @Test
+    @DisplayName("Outbox 테이블에 주문 완료 이벤트 저장 테스트")
+    public void testOutboxEventSaved() {
+        // given 주문 데이터 준비
+        OrderItemDTO orderItemDTO = OrderItemDTO.builder()
+                .productId(1L)
+                .paymentAmount(1000)
+                .quantity(1)
+                .build();
+        List<OrderItemDTO> orderItems = List.of(orderItemDTO);
+
+        // when: 주문 실행 (Outbox 이벤트도 함께 저장됨)
+        orderFacade.placeOrder(1L, orderItems, 1L);
+
+        // then: Outbox 테이블에 이벤트가 저장되었는지 확인
+        Integer count = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM order_outbox WHERE status = 'READY'", Integer.class);
+        assertNotNull(count);
+        assertEquals(1, count);
+    }
     @AfterEach
     void tearDown() {
         // 테스트 후 데이터 삭제
         jdbcTemplate.execute("TRUNCATE TABLE coupon");
+        jdbcTemplate.execute("TRUNCATE TABLE order_outbox");
         jdbcTemplate.execute("TRUNCATE TABLE user_coupon");
         jdbcTemplate.execute("TRUNCATE TABLE product");
         jdbcTemplate.execute("TRUNCATE TABLE user");
