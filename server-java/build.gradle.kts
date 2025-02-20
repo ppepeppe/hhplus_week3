@@ -49,6 +49,10 @@ dependencies {
 	// redisson
 	implementation("org.springframework.boot:spring-boot-starter-data-redis")
 	implementation("org.redisson:redisson-spring-boot-starter:3.17.6")
+	// Kafka
+	implementation("org.springframework.kafka:spring-kafka")
+	// Kafka Test
+	testImplementation("org.springframework.kafka:spring-kafka-test")
 	// Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.springframework.boot:spring-boot-testcontainers")
@@ -86,4 +90,17 @@ tasks.jacocoTestCoverageVerification {
 }
 tasks.named("check") {
 	dependsOn(tasks.jacocoTestCoverageVerification) // ✅ 커버리지 검증 포함
+}
+tasks.test {
+	useJUnitPlatform {
+		excludeTags("kafka")  // 기본 테스트에서 제외
+	}
+}
+
+// Kafka 테스트를 위한 별도 태스크
+tasks.register<Test>("kafkaTest") {
+	useJUnitPlatform {
+		includeTags("kafka")
+	}
+	mustRunAfter(tasks.test)  // 일반 테스트 후 실행
 }
