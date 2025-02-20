@@ -2,6 +2,7 @@ package kr.hhplus.be.server.apps.order.application.usecase;
 
 import kr.hhplus.be.server.apps.coupon.domain.service.CouponService;
 import kr.hhplus.be.server.apps.coupon.domain.service.UserCouponService;
+import kr.hhplus.be.server.apps.kafka.domain.service.OrderEventService;
 import kr.hhplus.be.server.apps.order.domain.models.dto.FinalAmountResult;
 import kr.hhplus.be.server.apps.order.domain.models.dto.OrderCommand;
 import kr.hhplus.be.server.apps.order.domain.models.dto.OrderPrepareResult;
@@ -29,6 +30,7 @@ public class OrderUseCase {
     private final UserPointService userPointService;
     private final SalesStatsService salesStatsService;
     private final DataPlatformService dataPlatformService;
+    private final OrderEventService orderEventService;
 
     @Transactional
     public Order placeOrder(OrderCommand command) {
@@ -66,8 +68,8 @@ public class OrderUseCase {
         salesStatsService.updateSalesStatistics(orderPrepareResult.getOrderItems());
 
         // 9. 외부 데이터 플랫폼 전송 (비동기)
-        dataPlatformService.sendOrderData(order);
-
+//        dataPlatformService.sendOrderData(order);
+        orderEventService.publishOrderCompletedEvent(order); // 동일 트랜잭션 내에 저장
         return order;
     }
 }
