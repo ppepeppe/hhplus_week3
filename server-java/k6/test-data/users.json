@@ -1,0 +1,7 @@
+{
+  "users": [
+    { "id": "user1", "name": "사용자1", "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ1c2VyMSJ9.example" },
+    { "id": "user2", "name": "사용자2", "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ1c2VyMiJ9.example" },
+    { "id": "user3", "name": "사용자3", "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ1c2VyMyJ9.example" }
+  ]
+}

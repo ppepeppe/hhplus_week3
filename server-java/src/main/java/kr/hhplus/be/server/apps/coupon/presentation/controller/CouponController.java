@@ -43,7 +43,7 @@ public class CouponController {
         return ResponseEntity.ok(userCoupons);
     }
 
-    @GetMapping("users/{userId}/coupon/{couponId}")
+    @PostMapping("/users/{userId}/coupon/{couponId}")
     public ResponseEntity<UserCoupon> issueCoupon(@PathVariable Long userId, @PathVariable Long couponId) throws InterruptedException {
         UserCoupon userCoupon = couponFacade.issueCoupon(userId, "", couponId);
         return ResponseEntity.ok(userCoupon);

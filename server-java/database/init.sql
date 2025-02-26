@@ -54,6 +54,18 @@ CREATE TABLE `user_point` (
     point INT NOT NULL                                -- 회원 포인트
 );
 
+CREATE TABLE `order_outbox` (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,  -- 회원 포인트 ID (PK)
+    event_type VARCHAR(255) NOT NULL,                          -- 회원 ID
+    payload VARCHAR(255) NOT NULL,                                -- 회원 포인트
+    status VARCHAR(255) NOT NULL,
+    fail_count INT NOT NULL ,
+    error_message VARCHAR(255) NOT NULL,
+    created_at DATETIME NOT NULL,
+    sent_at DATETIME NOT NULL
+);
+
+
 
 INSERT INTO coupon (code, discount_percent, valid_date, max_count, current_count)
 VALUES ("TESTCODE", 0.25, "2025-1-11", 30, 0);

@@ -1,4 +1,3 @@
-version: '3'
 services:
   mysql:
     image: mysql:8.0
@@ -12,11 +11,13 @@ services:
     volumes:
       #      - ./data/mysql/:/var/lib/mysql
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+
   zookeeper:
     image: wurstmeister/zookeeper
     container_name: zookeeper
     ports:
       - "2181:2181"
+
   kafka:
     image: wurstmeister/kafka
     container_name: kafka
@@ -28,7 +29,56 @@ services:
       KAFKA_CREATE_TOPICS: "order-events:1:1"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+
+  influxdb:
+    image: influxdb:1.8
+    container_name: k6_influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      - INFLUXDB_DB=k6
+      - INFLUXDB_USER=admin
+      - INFLUXDB_USER_PASSWORD=admin
+    volumes:
+      - influxdb-data:/var/lib/influxdb
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: k6_grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - influxdb
+
+  k6:
+    image: grafana/k6:latest
+    container_name: k6_load_test
+    volumes:
+      - ./k6/scripts:/scripts
+      - ./k6/test-data:/test-data
+    environment:
+      - K6_OUT=influxdb=http://influxdb:8086/k6
+    # 기본적으로는 실행만 하지 않고 대기합니다. 테스트 실행은 명령어로 별도 실행
+    entrypoint: ["tail", "-f", "/dev/null"]
 
 networks:
   default:
     driver: bridge
+
+volumes:
+  influxdb-data:
+  grafana-data:
+  redis-data:  # 이 볼륨 정의를 추가
