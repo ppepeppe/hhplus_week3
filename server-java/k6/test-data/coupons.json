@@ -1,0 +1,7 @@
+{
+  "coupons": [
+    { "id": "coupon1", "code": "WELCOME10", "discount": 10 },
+    { "id": "coupon2", "code": "SALE20", "discount": 20 },
+    { "id": "coupon3", "code": "VIP30", "discount": 30 }
+  ]
+}

@@ -851,3 +851,181 @@ Apache Kafka는 **실시간 데이터 파이프라인**과 **스트리밍 애플
 ![alt](./docs/img/kafka결과.png)
 
 
+## 부하 테스트 보고서 
+
+## 부하테스트 시나리오 선정 및 선정된 시나리오의 API 개별 테스트
+(리스트)
+1. 쿠폰 등록 API (POST) /coupon/reg
+2. 유저 쿠폰 리스트 API (GET) /coupon/{userId}/couponlist
+3. 유저 쿠폰 발행 API(POST) /coupon/users/{userId}/coupon/{couponId}
+4. 상품 주문 API(POST) /orders/payment
+5. 상품 주문 API(POST) /products/{productId}
+6. 상품 주문 API(POST) /products/productl ist
+7. 인기 판매 조회 API(POST) /stats/products/top
+8. 유저 잔액 조회 API(POST) /users/point
+9. 유저 잔액 충전 조회 API(POST) /users/charge
+
+이 중 유저 쿠폰 발행은
+
+1. 높은 동시성 요청 : 쿠폰 발행은 이벤트나 프로모션 기간에 다수의 사용자가 동시에 요청할 가능성이 높아, 동시 접속 처리 및 트랜잭션 관리 성능 검증이 필수
+2. 비즈니스 핵심 기능: 쿠폰 발행은 사용자 만족도와 매출에 직결되는 핵심 기능이므로, 부하가 걸렸을 때 안정적으로 동작하는지 확인하는 것이 중요
+3. 데이터 무결성 및 일관성 검증: 쿠폰 발행 과정에서 중복 발행이나 오류가 발생할 경우, 사용자 신뢰도 하락 및 재발행 이슈가 발생할 수 있으므로, 부하 상황에서도 데이터의 정확성을 유지
+
+따라 쿠폰 발행에 대한 부하테스트를 하기로 결정
+```js
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+import { Counter } from 'k6/metrics';
+
+// 성공 및 실패 카운터
+const successCounter = new Counter('successful_requests');
+const failureCounter = new Counter('failed_requests');
+const limitReachedCounter = new Counter('coupon_limit_reached');
+
+// 테스트 설정
+export const options = {
+    stages: [
+        { duration: '10s', target: 100 },
+        { duration: '20s', target: 300 },
+        { duration: '30s', target: 500 },
+        { duration: '20s', target: 500 },
+        { duration: '10s', target: 0 },
+    ],
+    thresholds: {
+        http_req_duration: ['p(95)<3000'],
+        'failed_requests': ['count<100'],
+    },
+};
+
+// 테스트할 쿠폰 정보
+const coupons = [
+    { id: 1, maxCount: 30 },
+    { id: 2, maxCount: 30 },
+    { id: 3, maxCount: 30 },
+    { id: 4, maxCount: 30 },
+    { id: 5, maxCount: 30 }
+];
+
+export default function() {
+    // 랜덤 사용자 ID (1-500)
+    const userId = Math.floor(Math.random() * 500) + 1;
+    // 랜덤 쿠폰 선택
+    const couponIndex = Math.floor(Math.random() * coupons.length);
+    const coupon = coupons[couponIndex];
+
+    // 클라이언트 측 쿠폰 발급 제한 검사 제거
+    // 대신 서버가 쿠폰 한도를 관리하므로 요청을 보냄
+
+    // API 엔드포인트 URL
+    const url = `http://host.docker.internal:8080/coupon/users/${userId}/coupon/${coupon.id}`;
+
+    // HTTP 요청 헤더
+    const params = {
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    };
+
+    // POST 요청 전송
+    const response = http.post(url, null, params);
+
+    // 응답 처리
+    if (response.status === 200) {
+        try {
+            const responseBody = JSON.parse(response.body);
+            if (responseBody.result_code === 200) {
+                successCounter.add(1);
+                // 디버그 로그는 주석 처리하거나 필요 시 조건부로 출력
+                // console.log(`쿠폰 ${coupon.id} 발급 성공 (사용자: ${userId})`);
+            } else {
+                failureCounter.add(1);
+                // console.log(`API 오류: ${responseBody.message}`);
+            }
+        } catch (e) {
+            failureCounter.add(1);
+            // console.log(`응답 파싱 오류: ${e}`);
+        }
+    } else if (response.status === 400) {
+        try {
+            const responseBody = JSON.parse(response.body);
+            if (responseBody.message && responseBody.message.includes("limit reached")) {
+                // 서버에서 한도 도달로 판단
+                limitReachedCounter.add(1);
+                // console.log(`서버 응답: 쿠폰 ${coupon.id} 한도 도달`);
+            } else {
+                failureCounter.add(1);
+                // console.log(`요청 오류: ${responseBody.message}`);
+            }
+        } catch (e) {
+            failureCounter.add(1);
+            // console.log(`응답 파싱 오류: ${e}`);
+        }
+    } else {
+        failureCounter.add(1);
+        // console.log(`HTTP 오류: ${response.status}`);
+    }
+
+    // 요청 간 대기 시간
+    sleep(Math.random() * 1 + 0.5); // 0.5 ~ 1.5초 대기
+}
+
+// 테스트 완료 후 실행
+export function teardown() {
+    console.log("테스트 완료.");
+}
+```
+테스트 코는 다음과 같다
+
+![alt](./docs/img/부하테스트_결과.png)
+
+HTTP 요청 자체는 정상적으로 응답되고 있으며
+평균 응답시간(15.18ms)과 p95(36.26ms) 상태. 또한 http_req_failed 지표는 0%로, 네트워크나 연결 측면의 오류는 없음
+다만 커스텀 실패 카운트가 28000건 이상 나온 상황
+쿠폰 발급 한도가 넘은 경우인데 이 경우 어떻게 처리할 지 좀더 고민이 필요
+
+ ![alt](./docs/img/디비결과.png)
+
+db엔 발급이 잘 된것을 확인 할 수 있음
+
+## 장애 대응
+5.1 장애 감지 및 모니터링
+모니터링 도구 적용:
+
+Prometheus + Grafana: 실시간 메트릭 시각화
+
+APM (New Relic, Datadog) 도입: 트랜잭션 추적 및 성능 분석
+
+알림 시스템 구성: Slack, 이메일 연동
+
+5.2 장애 대응 절차
+장애 감지 후 대응 시나리오:
+  Step 1. 장애 감지 및 알림 수신: 
+    - 모니터링 도구 알림 확인
+  
+  Step 2. 장애 원인 분석:
+    - Redis 분산락 확인
+
+  Step 3. 장애 복구 조치:
+    - Redis 분산락 해제
+    - 백엔드 서비스 스케일 아웃
+    - 빠른 롤백 준비
+
+  Step 4. 후속 조치 및 로그 분석:
+    - 발생 원인 분석 및 재발 방지책 수립
+    - 장애 대응 과정 기록 및 리뷰
+    - 모니터링 철저히 확인
+
+결론 및 개선 계획
+ 문제점 요약:
+  높은 동시성 요청에 대한 실패 
+  실제 요청 처리는 됐으나 쿠폰 발급 한도 제한으로 인해 에러가나는 상황
+  - > 수정 필요
+```
+ // 쿠폰 발급 가능 여부 확인 및 발급 수 증가
+    public void incrementUsage() {
+        if (currentCount >= maxCount) {
+            throw new IllegalArgumentException("Coupon usage limit reached");
+        }
+        this.currentCount += 1;
+    }
+```

@@ -31,7 +31,7 @@ public class CouponFacade {
                 throw new RuntimeException("Failed to acquire lock");
             }
 
-            return couponUseCase.execute(userId, couponCode, couponId);
+            return couponUseCase.issueCouponToUser(userId, couponCode, couponId);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("Lock interrupted", e);

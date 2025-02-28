@@ -21,7 +21,7 @@ public class ProductController {
     /**
      * 상품 리스트 조회
      */
-    @GetMapping("/all")
+    @GetMapping("/productlist")
     public Page<Product> getProductList(@RequestParam(defaultValue = "0") int page, // 기본 페이지 번호: 0
                                         @RequestParam(defaultValue = "10") int size ) {
         return productService.getProductList(page, size);
