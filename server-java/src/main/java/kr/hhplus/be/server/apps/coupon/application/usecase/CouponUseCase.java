@@ -31,7 +31,7 @@ public class CouponUseCase {
     private final LockService lockService;
 
     @Transactional
-    public UserCoupon execute(Long userId, String couponCode, Long couponId) {
+    public UserCoupon issueCouponToUser(Long userId, String couponCode, Long couponId) {
         Coupon coupon = couponService.getCouponById(couponId);
         couponService.incrementCouponUsage(coupon);
         redisTemplate.opsForValue().decrement(COUPON_STOCK_KEY + couponId);
